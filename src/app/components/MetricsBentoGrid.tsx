@@ -118,11 +118,18 @@ interface GitHubStats {
   followers: number;
 }
 
+interface CodeforcesStats {
+  rating: number | null;
+  maxRating: number | null;
+  rank: string | null;
+}
+
 export default function MetricsBentoGrid() {
   const { user } = useAuth();
   const [lcStats, setLcStats] = useState<LeetCodeStats | null>(null);
   const [lcLoading, setLcLoading] = useState(true);
   const [ghStats, setGhStats] = useState<GitHubStats | null>(null);
+  const [cfStats, setCfStats] = useState<CodeforcesStats | null>(null);
 
   const fetchLeetCodeStats = useCallback(async () => {
     if (!user) { setLcLoading(false); return; }
@@ -177,10 +184,38 @@ export default function MetricsBentoGrid() {
     }
   }, [user]);
 
+  const fetchCodeforcesStats = useCallback(async () => {
+    if (!user) return;
+    try {
+      const supabase = createClient();
+      const { data: conn } = await supabase
+        .from('platform_connections')
+        .select('username')
+        .eq('user_id', user.id)
+        .eq('platform', 'codeforces')
+        .single();
+
+      if (!conn?.username) return;
+
+      const res = await fetch(`/api/codeforces?handle=${encodeURIComponent(conn.username)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCfStats({
+          rating: data.rating ?? null,
+          maxRating: data.maxRating ?? null,
+          rank: data.rank ?? null,
+        });
+      }
+    } catch {
+      // silently fail
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchLeetCodeStats();
     fetchGitHubStats();
-  }, [fetchLeetCodeStats, fetchGitHubStats]);
+    fetchCodeforcesStats();
+  }, [fetchLeetCodeStats, fetchGitHubStats, fetchCodeforcesStats]);
 
   // Derived values
   const totalSolved = lcStats?.solved.total ?? 0;
@@ -257,12 +292,18 @@ export default function MetricsBentoGrid() {
         )}
       </MetricCard>
 
-      {/* Codeforces Rating — placeholder (no API yet) */}
+      {/* Codeforces Rating — real data when connected */}
       <MetricCard
         id="metric-cf-rating"
         title="Codeforces Rating"
-        value="—"
-        subvalue="Connect Codeforces to see rating"
+        value={cfStats?.rating != null ? String(cfStats.rating) : '—'}
+        subvalue={cfStats
+          ? cfStats.rank
+            ? `${cfStats.rank}${cfStats.maxRating != null ? ` · Max ${cfStats.maxRating}` : ''}`
+            : cfStats.maxRating != null
+              ? `Max rating: ${cfStats.maxRating}`
+              : 'Unrated' :'Connect Codeforces to see rating'}
+        trend={cfStats?.rating != null ? { direction: 'neutral', label: cfStats.rank ?? '' } : undefined}
         icon={Zap}
         iconColor="bg-codeforces/15 text-codeforces"
         bgAccent="#1890ff"
