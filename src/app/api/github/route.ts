@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   try {
     const headers: Record<string, string> = {
       'Accept': 'application/vnd.github.v3+json',
-      'User-Agent': 'CodeTrack/1.0',
+      'User-Agent': 'ProgressTracker/1.0',
     };
 
     // Fetch user profile, repos, and merged PRs count in parallel

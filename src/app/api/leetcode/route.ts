@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'Referer': 'https://leetcode.com',
-        'User-Agent': 'Mozilla/5.0 (compatible; CodeTrack/1.0)',
+        'User-Agent': 'Mozilla/5.0 (compatible; ProgressTracker/1.0)',
       },
       body: JSON.stringify({
         operationName: 'combinedStats',

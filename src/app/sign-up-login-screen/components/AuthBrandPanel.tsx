@@ -15,7 +15,7 @@ export default function AuthBrandPanel() {
           <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
             <span className="text-primary font-bold text-sm font-mono">CT</span>
           </div>
-          <span className="font-bold text-foreground text-xl tracking-tight">CodeTrack</span>
+          <span className="font-bold text-foreground text-xl tracking-tight">ProgressTracker</span>
         </div>
 
         <h2 className="text-3xl xl:text-4xl font-bold text-foreground leading-tight tracking-tight mb-4">
