@@ -14,10 +14,11 @@ export async function GET(request: NextRequest) {
       'User-Agent': 'CodeTrack/1.0',
     };
 
-    // Fetch user profile and repos in parallel
-    const [userRes, reposRes] = await Promise.all([
+    // Fetch user profile, repos, and merged PRs count in parallel
+    const [userRes, reposRes, mergedPRsRes] = await Promise.all([
       fetch(`https://api.github.com/users/${encodeURIComponent(username)}`, { headers, next: { revalidate: 300 } }),
       fetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100&sort=updated`, { headers, next: { revalidate: 300 } }),
+      fetch(`https://api.github.com/search/issues?q=author:${encodeURIComponent(username)}+type:pr+is:merged&per_page=1`, { headers, next: { revalidate: 300 } }),
     ]);
 
     if (!userRes.ok) {
@@ -29,6 +30,7 @@ export async function GET(request: NextRequest) {
 
     const userData = await userRes.json();
     const reposData = reposRes.ok ? await reposRes.json() : [];
+    const mergedPRsData = mergedPRsRes.ok ? await mergedPRsRes.json() : { total_count: 0 };
 
     // Calculate stats from public data
     const totalStars = Array.isArray(reposData)
@@ -39,7 +41,10 @@ export async function GET(request: NextRequest) {
       ? reposData.reduce((sum: number, r: { forks_count: number }) => sum + (r.forks_count ?? 0), 0)
       : 0;
 
-    // Get recent events (pushes, PRs) from public events API
+    // Total merged PRs from search API (accurate count across all repos)
+    const totalMergedPRs = mergedPRsData?.total_count ?? 0;
+
+    // Get recent events (pushes) from public events API
     const eventsRes = await fetch(
       `https://api.github.com/users/${encodeURIComponent(username)}/events/public?per_page=30`,
       { headers, next: { revalidate: 300 } }
@@ -49,12 +54,6 @@ export async function GET(request: NextRequest) {
 
     const pushEvents = Array.isArray(eventsData)
       ? eventsData.filter((e: { type: string }) => e.type === 'PushEvent')
-      : [];
-
-    const prEvents = Array.isArray(eventsData)
-      ? eventsData.filter((e: { type: string; payload: { action: string; pull_request?: { merged: boolean } } }) =>
-          e.type === 'PullRequestEvent' && e.payload?.action === 'closed' && e.payload?.pull_request?.merged === true
-        )
       : [];
 
     const recentCommits = pushEvents.slice(0, 5).map((e: {
@@ -78,7 +77,7 @@ export async function GET(request: NextRequest) {
       following: userData.following ?? 0,
       totalStars,
       totalForks,
-      recentPRsMerged: prEvents.length,
+      recentPRsMerged: totalMergedPRs,
       recentCommits,
       profileUrl: userData.html_url,
     });

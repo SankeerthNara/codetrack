@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   RadialBarChart,
   RadialBar,
@@ -8,12 +8,14 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
-const data = [
-  { name: 'Hard', value: 37, fill: 'var(--danger)' },
-  { name: 'Medium', value: 168, fill: 'var(--warning)' },
-  { name: 'Easy', value: 142, fill: 'var(--success)' },
-];
+interface DifficultyData {
+  name: string;
+  value: number;
+  fill: string;
+}
 
 const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; value: number } }> }) => {
   if (active && payload && payload.length) {
@@ -29,36 +31,94 @@ const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<
 };
 
 export default function LeetCodeDifficultyChart() {
+  const { user } = useAuth();
+  const [data, setData] = useState<DifficultyData[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [notConnected, setNotConnected] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    if (!user) { setLoading(false); setNotConnected(true); return; }
+    try {
+      const supabase = createClient();
+      const { data: conn } = await supabase
+        .from('platform_connections')
+        .select('username')
+        .eq('user_id', user.id)
+        .eq('platform', 'leetcode')
+        .single();
+
+      if (!conn?.username) { setLoading(false); setNotConnected(true); return; }
+
+      const res = await fetch(`/api/leetcode?username=${encodeURIComponent(conn.username)}`);
+      if (res.ok) {
+        const json = await res.json();
+        const easy = json.solved?.easy ?? 0;
+        const medium = json.solved?.medium ?? 0;
+        const hard = json.solved?.hard ?? 0;
+        const totalSolved = json.solved?.total ?? (easy + medium + hard);
+        setTotal(totalSolved);
+        setData([
+          { name: 'Hard', value: hard, fill: 'var(--danger)' },
+          { name: 'Medium', value: medium, fill: 'var(--warning)' },
+          { name: 'Easy', value: easy, fill: 'var(--success)' },
+        ]);
+      } else {
+        setNotConnected(true);
+      }
+    } catch {
+      setNotConnected(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
   return (
     <div className="bg-card border border-border rounded-xl p-5 h-72 flex flex-col">
       <div className="mb-3">
         <p className="text-sm font-semibold text-foreground">LeetCode Distribution</p>
-        <p className="text-xs text-muted-foreground">347 problems solved by difficulty</p>
+        <p className="text-xs text-muted-foreground">
+          {loading ? 'Loading...' : notConnected ? 'Connect LeetCode to see data' : `${total} problems solved by difficulty`}
+        </p>
       </div>
       <div className="flex-1">
-        <ResponsiveContainer width="100%" height="100%">
-          <RadialBarChart
-            cx="50%"
-            cy="50%"
-            innerRadius="30%"
-            outerRadius="90%"
-            data={data}
-            startAngle={90}
-            endAngle={-270}
-          >
-            <RadialBar
-              dataKey="value"
-              cornerRadius={4}
-              background={{ fill: 'var(--secondary)' }}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend
-              iconType="circle"
-              iconSize={8}
-              wrapperStyle={{ fontSize: '11px', color: 'var(--muted-foreground)' }}
-            />
-          </RadialBarChart>
-        </ResponsiveContainer>
+        {loading ? (
+          <div className="h-full flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : notConnected || data.length === 0 ? (
+          <div className="h-full flex items-center justify-center">
+            <p className="text-xs text-muted-foreground">No data available</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <RadialBarChart
+              cx="50%"
+              cy="50%"
+              innerRadius="30%"
+              outerRadius="90%"
+              data={data}
+              startAngle={90}
+              endAngle={-270}
+            >
+              <RadialBar
+                dataKey="value"
+                cornerRadius={4}
+                background={{ fill: 'var(--secondary)' }}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend
+                iconType="circle"
+                iconSize={8}
+                wrapperStyle={{ fontSize: '11px', color: 'var(--muted-foreground)' }}
+              />
+            </RadialBarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );
