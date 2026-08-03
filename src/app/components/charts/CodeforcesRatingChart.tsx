@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   LineChart,
   Line,
@@ -11,20 +11,14 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
-// Backend integration point: replace with real Codeforces API data
-const ratingHistory = [
-  { contest: 'Rd 860', date: 'Jan 8', rating: 1642 },
-  { contest: 'Rd 862', date: 'Jan 22', rating: 1701 },
-  { contest: 'Rd 865', date: 'Feb 5', rating: 1688 },
-  { contest: 'Rd 869', date: 'Feb 19', rating: 1754 },
-  { contest: 'Rd 873', date: 'Mar 4', rating: 1812 },
-  { contest: 'Rd 877', date: 'Mar 18', rating: 1799 },
-  { contest: 'Rd 880', date: 'Apr 1', rating: 1856 },
-  { contest: 'Rd 883', date: 'Apr 15', rating: 1923 },
-  { contest: 'Rd 887', date: 'May 6', rating: 1891 },
-  { contest: 'Rd 890', date: 'May 20', rating: 1847 },
-];
+interface RatingPoint {
+  contestName: string;
+  date: string;
+  rating: number;
+}
 
 const CustomTooltip = ({
   active,
@@ -37,7 +31,7 @@ const CustomTooltip = ({
 }) => {
   if (active && payload && payload.length) {
     const val = payload[0].value;
-    const rank = val >= 1900 ? 'Candidate Master' : val >= 1600 ? 'Expert' : val >= 1400 ? 'Specialist' : 'Pupil';
+    const rank = val >= 2400 ? 'International Grandmaster' : val >= 2100 ? 'Grandmaster' : val >= 1900 ? 'Candidate Master' : val >= 1600 ? 'Expert' : val >= 1400 ? 'Specialist' : 'Pupil';
     return (
       <div className="bg-card border border-border rounded-lg px-3 py-2.5 shadow-xl">
         <p className="text-xs text-muted-foreground mb-1">{label}</p>
@@ -50,58 +44,122 @@ const CustomTooltip = ({
 };
 
 export default function CodeforcesRatingChart() {
+  const { user } = useAuth();
+  const [ratingHistory, setRatingHistory] = useState<RatingPoint[]>([]);
+  const [currentRating, setCurrentRating] = useState<number | null>(null);
+  const [maxRating, setMaxRating] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notConnected, setNotConnected] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    if (!user) { setLoading(false); setNotConnected(true); return; }
+    try {
+      const supabase = createClient();
+      const { data: conn } = await supabase
+        .from('platform_connections')
+        .select('username')
+        .eq('user_id', user.id)
+        .eq('platform', 'codeforces')
+        .single();
+
+      if (!conn?.username) { setLoading(false); setNotConnected(true); return; }
+
+      const res = await fetch(`/api/codeforces?handle=${encodeURIComponent(conn.username)}`);
+      if (res.ok) {
+        const json = await res.json();
+        setCurrentRating(json.rating ?? null);
+        setMaxRating(json.maxRating ?? null);
+        setRatingHistory(json.ratingHistory ?? []);
+      } else {
+        setNotConnected(true);
+      }
+    } catch {
+      setNotConnected(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const ratings = ratingHistory.map((r) => r.rating);
+  const minRating = ratings.length > 0 ? Math.min(...ratings) - 100 : 1000;
+  const maxRatingVal = ratings.length > 0 ? Math.max(...ratings) + 100 : 2000;
+
   return (
     <div className="bg-card border border-border rounded-xl p-5 h-72 flex flex-col">
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="text-sm font-semibold text-foreground">Codeforces Rating History</p>
-          <p className="text-xs text-muted-foreground">Last 10 contests · Current: 1,847</p>
+          <p className="text-xs text-muted-foreground">
+            {loading
+              ? 'Loading...'
+              : notConnected
+              ? 'Connect Codeforces to see data'
+              : ratingHistory.length === 0
+              ? 'No contest history found'
+              : `Last ${ratingHistory.length} contests · Current: ${currentRating?.toLocaleString() ?? '—'}`}
+          </p>
         </div>
-        <div className="flex items-center gap-3 text-xs">
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <span className="w-6 h-0.5 bg-codeforces inline-block rounded" />
-            Rating
-          </span>
-          <span className="flex items-center gap-1.5 text-muted-foreground">
-            <span className="w-6 h-px border-dashed border-t border-warning inline-block" />
-            Peak
-          </span>
-        </div>
+        {!loading && !notConnected && ratingHistory.length > 0 && (
+          <div className="flex items-center gap-3 text-xs">
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <span className="w-6 h-0.5 bg-codeforces inline-block rounded" />
+              Rating
+            </span>
+            {maxRating && (
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <span className="w-6 h-px border-dashed border-t border-warning inline-block" />
+                Peak
+              </span>
+            )}
+          </div>
+        )}
       </div>
       <div className="flex-1">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={ratingHistory} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
-            <defs>
-              <linearGradient id="cfRatingGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--codeforces)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="var(--codeforces)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="date"
-              tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              domain={[1550, 1980]}
-              tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <ReferenceLine y={1923} stroke="var(--warning)" strokeDasharray="4 4" strokeWidth={1} />
-            <Line
-              type="monotone"
-              dataKey="rating"
-              stroke="var(--codeforces)"
-              strokeWidth={2}
-              dot={{ fill: 'var(--codeforces)', r: 3, strokeWidth: 0 }}
-              activeDot={{ r: 5, fill: 'var(--codeforces)', strokeWidth: 0 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        {loading ? (
+          <div className="h-full flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : notConnected || ratingHistory.length === 0 ? (
+          <div className="h-full flex items-center justify-center">
+            <p className="text-xs text-muted-foreground">
+              {notConnected ? 'Connect Codeforces to see rating history' : 'No contest history found'}
+            </p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={ratingHistory} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
+              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                domain={[minRating, maxRatingVal]}
+                tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              {maxRating && (
+                <ReferenceLine y={maxRating} stroke="var(--warning)" strokeDasharray="4 4" strokeWidth={1} />
+              )}
+              <Line
+                type="monotone"
+                dataKey="rating"
+                stroke="var(--codeforces)"
+                strokeWidth={2}
+                dot={{ fill: 'var(--codeforces)', r: 3, strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: 'var(--codeforces)', strokeWidth: 0 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );
