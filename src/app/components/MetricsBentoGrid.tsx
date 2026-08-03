@@ -122,6 +122,7 @@ interface CodeforcesStats {
   rating: number | null;
   maxRating: number | null;
   rank: string | null;
+  problemsSolved?: number;
 }
 
 export default function MetricsBentoGrid() {
@@ -204,6 +205,7 @@ export default function MetricsBentoGrid() {
           rating: data.rating ?? null,
           maxRating: data.maxRating ?? null,
           rank: data.rank ?? null,
+          problemsSolved: data.problemsSolved ?? 0,
         });
       }
     } catch {
@@ -298,11 +300,8 @@ export default function MetricsBentoGrid() {
         title="Codeforces Rating"
         value={cfStats?.rating != null ? String(cfStats.rating) : '—'}
         subvalue={cfStats
-          ? cfStats.rank
-            ? `${cfStats.rank}${cfStats.maxRating != null ? ` · Max ${cfStats.maxRating}` : ''}`
-            : cfStats.maxRating != null
-              ? `Max rating: ${cfStats.maxRating}`
-              : 'Unrated' :'Connect Codeforces to see rating'}
+          ? `${cfStats.rank ? cfStats.rank : 'Unrated'}${cfStats.maxRating != null ? ` · Max ${cfStats.maxRating}` : ''}${cfStats.problemsSolved != null && cfStats.problemsSolved > 0 ? ` · ${cfStats.problemsSolved} solved` : ''}`
+          : 'Connect Codeforces to see rating'}
         trend={cfStats?.rating != null ? { direction: 'neutral', label: cfStats.rank ?? '' } : undefined}
         icon={Zap}
         iconColor="bg-codeforces/15 text-codeforces"

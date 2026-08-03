@@ -9,12 +9,15 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch user info and rating history in parallel
-    const [infoRes, ratingRes] = await Promise.all([
+    // Fetch user info, rating history, and submissions in parallel
+    const [infoRes, ratingRes, statusRes] = await Promise.all([
       fetch(`https://codeforces.com/api/user.info?handles=${encodeURIComponent(handle)}`, {
         next: { revalidate: 300 },
       }),
       fetch(`https://codeforces.com/api/user.rating?handle=${encodeURIComponent(handle)}`, {
+        next: { revalidate: 300 },
+      }),
+      fetch(`https://codeforces.com/api/user.status?handle=${encodeURIComponent(handle)}&from=1&count=10000`, {
         next: { revalidate: 300 },
       }),
     ]);
@@ -32,6 +35,21 @@ export async function GET(request: NextRequest) {
     const ratingData = ratingRes.ok ? await ratingRes.json() : { status: 'FAILED', result: [] };
     const ratingHistory: Array<{ contestId: number; contestName: string; ratingUpdateTimeSeconds: number; newRating: number; oldRating: number }> =
       ratingData.status === 'OK' ? ratingData.result : [];
+
+    // Count unique problems solved (verdict OK)
+    let problemsSolved = 0;
+    if (statusRes.ok) {
+      const statusData = await statusRes.json();
+      if (statusData.status === 'OK') {
+        const solvedSet = new Set<string>();
+        for (const sub of statusData.result) {
+          if (sub.verdict === 'OK' && sub.problem) {
+            solvedSet.add(`${sub.problem.contestId}-${sub.problem.index}`);
+          }
+        }
+        problemsSolved = solvedSet.size;
+      }
+    }
 
     // Take last 10 contests
     const last10 = ratingHistory.slice(-10).map((entry) => ({
@@ -53,6 +71,7 @@ export async function GET(request: NextRequest) {
       maxRating,
       rank,
       maxRank,
+      problemsSolved,
       ratingHistory: last10,
     });
   } catch (err: unknown) {
