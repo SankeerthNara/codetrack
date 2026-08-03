@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { createClient } from '@/lib/supabase/client';
 
 interface LoginFormData {
   email: string;
@@ -19,10 +20,14 @@ interface LoginFormProps {
 
 export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const router = useRouter();
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, signInWithGitHub } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState('');
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   const {
     register,
@@ -51,7 +56,6 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
     setAuthError('');
     try {
       await signInWithGoogle();
-      // Redirect is handled by Supabase OAuth flow
     } catch (error: any) {
       const msg: string = error?.message || '';
       if (
@@ -60,13 +64,129 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         msg.toLowerCase().includes('validation_failed')
       ) {
         setAuthError(
-          'Google sign-in is not yet configured. To enable it, go to your Supabase dashboard → Authentication → Providers → Google, enable the Google provider, and add your OAuth credentials.'
+          'Google sign-in is not yet configured. Enable the Google provider in your Supabase dashboard → Authentication → Providers.'
         );
       } else {
         setAuthError(msg || 'Google sign-in failed. Please try again.');
       }
     }
   };
+
+  const handleGitHubSignIn = async () => {
+    setAuthError('');
+    try {
+      await signInWithGitHub();
+    } catch (error: any) {
+      const msg: string = error?.message || '';
+      if (
+        msg.toLowerCase().includes('provider is not enabled') ||
+        msg.toLowerCase().includes('unsupported provider') ||
+        msg.toLowerCase().includes('validation_failed')
+      ) {
+        setAuthError(
+          'GitHub sign-in is not yet configured. Enable the GitHub provider in your Supabase dashboard → Authentication → Providers.'
+        );
+      } else {
+        setAuthError(msg || 'GitHub sign-in failed. Please try again.');
+      }
+    }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) return;
+    setForgotLoading(true);
+    setAuthError('');
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?type=recovery`,
+      });
+      if (error) throw error;
+      setForgotSent(true);
+    } catch (error: any) {
+      setAuthError(error?.message || 'Failed to send reset email. Please try again.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // Forgot password view
+  if (forgotMode) {
+    return (
+      <div className="space-y-5">
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Reset your password</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Enter your email and we&apos;ll send you a reset link
+          </p>
+        </div>
+
+        {authError && (
+          <div className="flex items-start gap-2.5 bg-danger/10 border border-danger/20 rounded-lg px-3 py-2.5">
+            <AlertCircle size={15} className="text-danger flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-danger">{authError}</p>
+          </div>
+        )}
+
+        {forgotSent ? (
+          <div className="space-y-4">
+            <div className="flex items-start gap-2.5 bg-success/10 border border-success/20 rounded-lg px-3 py-2.5">
+              <p className="text-sm text-success">
+                Password reset email sent! Check your inbox and follow the link to reset your password.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setForgotMode(false); setForgotSent(false); setForgotEmail(''); }}
+              className="btn-ghost w-full flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-medium"
+            >
+              Back to Sign In
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleForgotPassword} className="space-y-4" noValidate>
+            <div>
+              <label htmlFor="forgot-email" className="block text-sm font-medium text-foreground mb-1.5">
+                Email address
+              </label>
+              <input
+                id="forgot-email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                className="input-field w-full px-3 py-2.5 text-sm"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={forgotLoading || !forgotEmail}
+              className="btn-primary w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {forgotLoading ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  <span>Sending...</span>
+                </>
+              ) : (
+                'Send Reset Link'
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setForgotMode(false); setAuthError(''); }}
+              className="w-full text-sm text-center text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Back to Sign In
+            </button>
+          </form>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -92,6 +212,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
         </button>
         <button
           type="button"
+          onClick={handleGitHubSignIn}
           className="btn-ghost flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium"
         >
           <svg className="w-4 h-4 text-foreground" fill="currentColor" viewBox="0 0 24 24">
@@ -143,7 +264,11 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
             <label htmlFor="login-password" className="block text-sm font-medium text-foreground">
               Password
             </label>
-            <button type="button" className="text-xs text-primary hover:text-primary/80 transition-colors">
+            <button
+              type="button"
+              onClick={() => { setForgotMode(true); setAuthError(''); }}
+              className="text-xs text-primary hover:text-primary/80 transition-colors"
+            >
               Forgot password?
             </button>
           </div>
@@ -202,17 +327,6 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           )}
         </button>
       </form>
-
-      {/* Demo credentials */}
-      <div className="border border-border rounded-xl p-4 bg-muted/30 space-y-3">
-        <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Demo Account</p>
-        </div>
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">Email: <span className="font-mono text-foreground">demo@codetrack.dev</span></p>
-          <p className="text-xs text-muted-foreground">Password: <span className="font-mono text-foreground">CodeTrack#2025</span></p>
-        </div>
-      </div>
 
       {/* Switch to sign up */}
       <p className="text-sm text-center text-muted-foreground">

@@ -21,7 +21,7 @@ interface SignUpFormProps {
 
 export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
   const router = useRouter();
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle, signInWithGitHub } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,6 +65,46 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
     }
   };
 
+  const handleGoogleSignUp = async () => {
+    setAuthError('');
+    try {
+      await signInWithGoogle();
+    } catch (error: any) {
+      const msg: string = error?.message || '';
+      if (
+        msg.toLowerCase().includes('provider is not enabled') ||
+        msg.toLowerCase().includes('unsupported provider') ||
+        msg.toLowerCase().includes('validation_failed')
+      ) {
+        setAuthError(
+          'Google sign-in is not yet configured. Enable the Google provider in your Supabase dashboard → Authentication → Providers.'
+        );
+      } else {
+        setAuthError(msg || 'Google sign-up failed. Please try again.');
+      }
+    }
+  };
+
+  const handleGitHubSignUp = async () => {
+    setAuthError('');
+    try {
+      await signInWithGitHub();
+    } catch (error: any) {
+      const msg: string = error?.message || '';
+      if (
+        msg.toLowerCase().includes('provider is not enabled') ||
+        msg.toLowerCase().includes('unsupported provider') ||
+        msg.toLowerCase().includes('validation_failed')
+      ) {
+        setAuthError(
+          'GitHub sign-in is not yet configured. Enable the GitHub provider in your Supabase dashboard → Authentication → Providers.'
+        );
+      } else {
+        setAuthError(msg || 'GitHub sign-up failed. Please try again.');
+      }
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div>
@@ -94,6 +134,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
+          onClick={handleGoogleSignUp}
           className="btn-ghost flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -106,6 +147,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
         </button>
         <button
           type="button"
+          onClick={handleGitHubSignUp}
           className="btn-ghost flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium"
         >
           <svg className="w-4 h-4 text-foreground" fill="currentColor" viewBox="0 0 24 24">
