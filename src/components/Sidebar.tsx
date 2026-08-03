@@ -16,7 +16,6 @@ import {
   Trophy,
   Sun,
   Moon,
-  BarChart3,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,7 +33,6 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard, group: 'main' },
   { label: 'Platform Connections', href: '/platform-connections', icon: Link2, group: 'main' },
-  { label: 'Connected Platforms', href: '/connected-platforms', icon: BarChart3, group: 'main' },
   { label: 'Leaderboard', href: '/leaderboard', icon: Trophy, group: 'main' },
   { label: 'Notifications', href: '/notifications', icon: Bell, group: 'account' },
   { label: 'Profile', href: '/profile', icon: User, group: 'account' },
