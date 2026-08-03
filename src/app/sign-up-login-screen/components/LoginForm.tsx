@@ -133,7 +133,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           <div className="space-y-4">
             <div className="flex items-start gap-2.5 bg-success/10 border border-success/20 rounded-lg px-3 py-2.5">
               <p className="text-sm text-success">
-                Password reset email sent! Check your inbox and follow the link to reset your password.
+                If an account exists with this email, you'll receive a reset link shortly. Please check your inbox.
               </p>
             </div>
             <button
