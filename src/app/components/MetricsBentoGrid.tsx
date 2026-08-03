@@ -111,10 +111,18 @@ interface LeetCodeStats {
   contest: { rating: number } | null;
 }
 
+interface GitHubStats {
+  publicRepos: number;
+  totalStars: number;
+  recentPRsMerged: number;
+  followers: number;
+}
+
 export default function MetricsBentoGrid() {
   const { user } = useAuth();
   const [lcStats, setLcStats] = useState<LeetCodeStats | null>(null);
   const [lcLoading, setLcLoading] = useState(true);
+  const [ghStats, setGhStats] = useState<GitHubStats | null>(null);
 
   const fetchLeetCodeStats = useCallback(async () => {
     if (!user) { setLcLoading(false); return; }
@@ -141,9 +149,38 @@ export default function MetricsBentoGrid() {
     }
   }, [user]);
 
+  const fetchGitHubStats = useCallback(async () => {
+    if (!user) return;
+    try {
+      const supabase = createClient();
+      const { data: conn } = await supabase
+        .from('platform_connections')
+        .select('username')
+        .eq('user_id', user.id)
+        .eq('platform', 'github')
+        .single();
+
+      if (!conn?.username) return;
+
+      const res = await fetch(`/api/github?username=${encodeURIComponent(conn.username)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setGhStats({
+          publicRepos: data.publicRepos ?? 0,
+          totalStars: data.totalStars ?? 0,
+          recentPRsMerged: data.recentPRsMerged ?? 0,
+          followers: data.followers ?? 0,
+        });
+      }
+    } catch {
+      // silently fail
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchLeetCodeStats();
-  }, [fetchLeetCodeStats]);
+    fetchGitHubStats();
+  }, [fetchLeetCodeStats, fetchGitHubStats]);
 
   // Derived values
   const totalSolved = lcStats?.solved.total ?? 0;
@@ -231,12 +268,15 @@ export default function MetricsBentoGrid() {
         bgAccent="#1890ff"
       />
 
-      {/* GitHub PRs Merged — placeholder (no API yet) */}
+      {/* GitHub PRs Merged — real data when connected */}
       <MetricCard
         id="metric-gh-prs"
         title="GitHub PRs Merged"
-        value="—"
-        subvalue="Connect GitHub to see stats"
+        value={ghStats ? String(ghStats.recentPRsMerged) : '—'}
+        subvalue={ghStats
+          ? `${ghStats.publicRepos} repos · ${ghStats.totalStars} stars`
+          : 'Connect GitHub to see stats'}
+        trend={ghStats && ghStats.recentPRsMerged > 0 ? { direction: 'up', label: 'Recent activity' } : undefined}
         icon={GitPullRequest}
         iconColor="bg-github/10 text-github"
         bgAccent="#e6edf3"
