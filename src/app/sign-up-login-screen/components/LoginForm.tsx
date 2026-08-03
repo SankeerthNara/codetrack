@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LoginFormData {
   email: string;
@@ -12,56 +13,38 @@ interface LoginFormData {
   remember: boolean;
 }
 
-// Demo credentials
-const DEMO_EMAIL = 'arjun@codetrack.dev';
-const DEMO_PASSWORD = 'TrackCode#2025';
-
 interface LoginFormProps {
   onSwitchToSignup: () => void;
 }
 
 export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const router = useRouter();
+  const { signIn } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [copiedField, setCopiedField] = useState<'email' | 'password' | null>(null);
   const [authError, setAuthError] = useState('');
 
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     defaultValues: { email: '', password: '', remember: false },
   });
 
-  const handleCopy = async (field: 'email' | 'password') => {
-    const val = field === 'email' ? DEMO_EMAIL : DEMO_PASSWORD;
-    await navigator.clipboard.writeText(val);
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 2000);
-  };
-
-  const fillDemo = () => {
-    setValue('email', DEMO_EMAIL);
-    setValue('password', DEMO_PASSWORD);
-    setAuthError('');
-  };
-
-  // Backend integration point: replace with real auth API call
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     setAuthError('');
-    await new Promise((r) => setTimeout(r, 1200));
-
-    if (data.email === DEMO_EMAIL && data.password === DEMO_PASSWORD) {
-      toast.success('Signed in successfully — welcome back, Arjun!');
+    try {
+      await signIn(data.email, data.password);
+      toast.success('Signed in successfully — welcome back!');
       router.push('/');
-    } else {
-      setAuthError('Invalid credentials — use the demo account below to sign in.');
+      router.refresh();
+    } catch (error: any) {
+      setAuthError(error?.message || 'Invalid email or password. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
@@ -202,62 +185,22 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       <div className="border border-border rounded-xl p-4 bg-muted/30 space-y-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Demo Account</p>
-          <button
-            type="button"
-            onClick={fillDemo}
-            className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
-          >
-            Autofill credentials
-          </button>
         </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-2xs text-muted-foreground mb-0.5">Email</p>
-              <p className="text-xs font-mono text-foreground truncate">{DEMO_EMAIL}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleCopy('email')}
-              className="p-1.5 rounded-md hover:bg-secondary transition-colors flex-shrink-0"
-              aria-label="Copy email"
-            >
-              {copiedField === 'email' ? (
-                <Check size={13} className="text-success" />
-              ) : (
-                <Copy size={13} className="text-muted-foreground" />
-              )}
-            </button>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="text-2xs text-muted-foreground mb-0.5">Password</p>
-              <p className="text-xs font-mono text-foreground">{DEMO_PASSWORD}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleCopy('password')}
-              className="p-1.5 rounded-md hover:bg-secondary transition-colors flex-shrink-0"
-              aria-label="Copy password"
-            >
-              {copiedField === 'password' ? (
-                <Check size={13} className="text-success" />
-              ) : (
-                <Copy size={13} className="text-muted-foreground" />
-              )}
-            </button>
-          </div>
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">Email: <span className="font-mono text-foreground">demo@codetrack.dev</span></p>
+          <p className="text-xs text-muted-foreground">Password: <span className="font-mono text-foreground">CodeTrack#2025</span></p>
         </div>
       </div>
 
-      <p className="text-center text-sm text-muted-foreground">
+      {/* Switch to sign up */}
+      <p className="text-sm text-center text-muted-foreground">
         Don&apos;t have an account?{' '}
         <button
           type="button"
           onClick={onSwitchToSignup}
           className="text-primary hover:text-primary/80 font-medium transition-colors"
         >
-          Create one free
+          Create one
         </button>
       </p>
     </div>

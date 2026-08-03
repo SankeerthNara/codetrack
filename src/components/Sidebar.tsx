@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import AppLogo from '@/components/ui/AppLogo';
 import {
   LayoutDashboard,
@@ -17,8 +18,8 @@ import {
   Moon,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/AppIcon';
-
 
 
 interface NavItem {
@@ -31,9 +32,9 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard, group: 'main' },
-  { label: 'Platform Connections', href: '/platform-connections', icon: Link2, badge: 1, group: 'main' },
+  { label: 'Platform Connections', href: '/platform-connections', icon: Link2, group: 'main' },
   { label: 'Leaderboard', href: '#', icon: Trophy, group: 'main' },
-  { label: 'Notifications', href: '#', icon: Bell, badge: 3, group: 'account' },
+  { label: 'Notifications', href: '#', icon: Bell, group: 'account' },
   { label: 'Profile', href: '#', icon: User, group: 'account' },
   { label: 'Settings', href: '#', icon: Settings, group: 'account' },
 ];
@@ -54,6 +55,8 @@ export default function Sidebar({
   onMobileClose,
 }: SidebarProps) {
   const { theme, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
+  const router = useRouter();
   const mainItems = navItems.filter((i) => i.group === 'main');
   const accountItems = navItems.filter((i) => i.group === 'account');
 
@@ -61,6 +64,26 @@ export default function Sidebar({
     if (href === '/') return activePath === '/';
     return activePath.startsWith(href);
   };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.push('/sign-up-login-screen');
+      router.refresh();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+  };
+
+  // Derive display name and initials from user
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const displayEmail = user?.email || '';
+  const initials = displayName
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   const ThemeToggleButton = ({ showLabel }: { showLabel: boolean }) => (
     <button
@@ -126,14 +149,6 @@ export default function Sidebar({
                   >
                     <Icon size={18} className="flex-shrink-0" />
                     {!collapsed && <span className="truncate">{item.label}</span>}
-                    {!collapsed && item.badge !== undefined && (
-                      <span className="ml-auto bg-primary/20 text-primary text-2xs font-semibold px-1.5 py-0.5 rounded-full tabular-nums">
-                        {item.badge}
-                      </span>
-                    )}
-                    {collapsed && item.badge !== undefined && (
-                      <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-primary rounded-full" />
-                    )}
                     {collapsed && (
                       <span className="absolute left-full ml-3 px-2 py-1 bg-secondary text-foreground text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 border border-border">
                         {item.label}
@@ -168,11 +183,6 @@ export default function Sidebar({
                   >
                     <Icon size={18} className="flex-shrink-0" />
                     {!collapsed && <span className="truncate">{item.label}</span>}
-                    {!collapsed && item.badge !== undefined && (
-                      <span className="ml-auto bg-warning/20 text-warning text-2xs font-semibold px-1.5 py-0.5 rounded-full tabular-nums">
-                        {item.badge}
-                      </span>
-                    )}
                     {collapsed && (
                       <span className="absolute left-full ml-3 px-2 py-1 bg-secondary text-foreground text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 border border-border">
                         {item.label}
@@ -197,13 +207,17 @@ export default function Sidebar({
           {!collapsed && (
             <div className="flex items-center gap-3 px-4 py-3">
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-primary text-xs font-bold">AK</span>
+                <span className="text-primary text-xs font-bold">{initials}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">Arjun Kumar</p>
-                <p className="text-2xs text-muted-foreground truncate">arjun@codetrack.dev</p>
+                <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+                <p className="text-2xs text-muted-foreground truncate">{displayEmail}</p>
               </div>
-              <button className="p-1.5 rounded-md hover:bg-secondary transition-colors" title="Sign out">
+              <button
+                onClick={handleSignOut}
+                className="p-1.5 rounded-md hover:bg-secondary transition-colors"
+                title="Sign out"
+              >
                 <LogOut size={14} className="text-muted-foreground" />
               </button>
             </div>
@@ -211,7 +225,7 @@ export default function Sidebar({
           {collapsed && (
             <div className="flex flex-col items-center gap-2 py-3">
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-primary text-xs font-bold">AK</span>
+                <span className="text-primary text-xs font-bold">{initials}</span>
               </div>
             </div>
           )}
@@ -271,11 +285,6 @@ export default function Sidebar({
                   >
                     <Icon size={18} />
                     <span>{item.label}</span>
-                    {item.badge !== undefined && (
-                      <span className="ml-auto bg-primary/20 text-primary text-2xs font-semibold px-1.5 py-0.5 rounded-full">
-                        {item.badge}
-                      </span>
-                    )}
                   </Link>
                 </li>
               );
@@ -298,11 +307,6 @@ export default function Sidebar({
                   >
                     <Icon size={18} />
                     <span>{item.label}</span>
-                    {item.badge !== undefined && (
-                      <span className="ml-auto bg-warning/20 text-warning text-2xs font-semibold px-1.5 py-0.5 rounded-full">
-                        {item.badge}
-                      </span>
-                    )}
                   </Link>
                 </li>
               );
@@ -318,13 +322,17 @@ export default function Sidebar({
         <div className="border-t border-border p-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-              <span className="text-primary text-xs font-bold">AK</span>
+              <span className="text-primary text-xs font-bold">{initials}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">Arjun Kumar</p>
-              <p className="text-2xs text-muted-foreground truncate">arjun@codetrack.dev</p>
+              <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+              <p className="text-2xs text-muted-foreground truncate">{displayEmail}</p>
             </div>
-            <button className="p-1.5 rounded-md hover:bg-secondary transition-colors" title="Sign out">
+            <button
+              onClick={handleSignOut}
+              className="p-1.5 rounded-md hover:bg-secondary transition-colors"
+              title="Sign out"
+            >
               <LogOut size={14} className="text-muted-foreground" />
             </button>
           </div>

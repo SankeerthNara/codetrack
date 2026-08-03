@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Loader2, CheckCircle2, Code2, GitPullRequest, Zap } from 'lucide-react';
+import { Eye, EyeOff, Loader2, AlertCircle, Code2, GitPullRequest, Zap } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SignUpFormData {
   fullName: string;
@@ -20,9 +21,11 @@ interface SignUpFormProps {
 
 export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
   const router = useRouter();
+  const { signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [authError, setAuthError] = useState('');
 
   const {
     register,
@@ -47,13 +50,19 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
 
   const strength = passwordStrength(passwordValue);
 
-  // Backend integration point: replace with real user registration API
   const onSubmit = async (data: SignUpFormData) => {
     setIsLoading(true);
-    await new Promise((r) => setTimeout(r, 1400));
-    toast.success(`Welcome to CodeTrack, ${data.fullName.split(' ')[0]}! Connect your first platform to get started.`);
-    router.push('/platform-connections');
-    setIsLoading(false);
+    setAuthError('');
+    try {
+      await signUp(data.email, data.password, { fullName: data.fullName });
+      toast.success(`Welcome to CodeTrack, ${data.fullName.split(' ')[0]}! Connect your first platform to get started.`);
+      router.push('/platform-connections');
+      router.refresh();
+    } catch (error: any) {
+      setAuthError(error?.message || 'Failed to create account. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -112,6 +121,14 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
         <div className="flex-1 h-px bg-border" />
       </div>
 
+      {/* Auth error */}
+      {authError && (
+        <div className="flex items-start gap-2.5 bg-danger/10 border border-danger/20 rounded-lg px-3 py-2.5">
+          <AlertCircle size={15} className="text-danger flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-danger">{authError}</p>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         {/* Full name */}
         <div>
@@ -122,7 +139,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
             id="signup-name"
             type="text"
             autoComplete="name"
-            placeholder="Arjun Kumar"
+            placeholder="Your Name"
             className={`input-field w-full px-3 py-2.5 text-sm ${errors.fullName ? 'input-error' : ''}`}
             {...register('fullName', {
               required: 'Full name is required',
@@ -248,10 +265,10 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
             <input
               id="terms"
               type="checkbox"
-              className="w-4 h-4 rounded accent-primary mt-0.5 flex-shrink-0"
+              className="w-4 h-4 rounded accent-primary mt-0.5"
               {...register('terms', { required: 'You must accept the terms to continue' })}
             />
-            <label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed">
+            <label htmlFor="terms" className="text-sm text-muted-foreground">
               I agree to the{' '}
               <button type="button" className="text-primary hover:text-primary/80 transition-colors">
                 Terms of Service
@@ -267,6 +284,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
           )}
         </div>
 
+        {/* Submit */}
         <button
           type="submit"
           disabled={isLoading}
@@ -278,15 +296,13 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
               <span>Creating account...</span>
             </>
           ) : (
-            <>
-              <CheckCircle2 size={15} />
-              Create Free Account
-            </>
+            'Create Account'
           )}
         </button>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      {/* Switch to login */}
+      <p className="text-sm text-center text-muted-foreground">
         Already have an account?{' '}
         <button
           type="button"
