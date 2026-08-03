@@ -3,16 +3,19 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
 import { useTheme } from '@/context/ThemeContext';
+import { usePathname } from 'next/navigation';
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  activePath: string;
+  activePath?: string;
 }
 
 export default function AppLayout({ children, activePath }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const { theme } = useTheme();
+  const pathname = usePathname();
+  const resolvedActivePath = activePath ?? pathname ?? '/';
 
   // Apply theme class to <html> element
   useEffect(() => {
@@ -40,7 +43,7 @@ export default function AppLayout({ children, activePath }: AppLayoutProps) {
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        activePath={activePath}
+        activePath={resolvedActivePath}
         mobileOpen={mobileSidebarOpen}
         onMobileClose={() => setMobileSidebarOpen(false)}
       />

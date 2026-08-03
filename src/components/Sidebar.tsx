@@ -33,10 +33,10 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard, group: 'main' },
   { label: 'Platform Connections', href: '/platform-connections', icon: Link2, group: 'main' },
-  { label: 'Leaderboard', href: '#', icon: Trophy, group: 'main' },
-  { label: 'Notifications', href: '#', icon: Bell, group: 'account' },
-  { label: 'Profile', href: '#', icon: User, group: 'account' },
-  { label: 'Settings', href: '#', icon: Settings, group: 'account' },
+  { label: 'Leaderboard', href: '/leaderboard', icon: Trophy, group: 'main' },
+  { label: 'Notifications', href: '/notifications', icon: Bell, group: 'account' },
+  { label: 'Profile', href: '/profile', icon: User, group: 'account' },
+  { label: 'Settings', href: '/settings', icon: Settings, group: 'account' },
 ];
 
 interface SidebarProps {
