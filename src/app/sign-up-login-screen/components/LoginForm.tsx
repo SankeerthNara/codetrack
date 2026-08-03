@@ -53,7 +53,18 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       await signInWithGoogle();
       // Redirect is handled by Supabase OAuth flow
     } catch (error: any) {
-      setAuthError(error?.message || 'Google sign-in failed. Please try again.');
+      const msg: string = error?.message || '';
+      if (
+        msg.toLowerCase().includes('provider is not enabled') ||
+        msg.toLowerCase().includes('unsupported provider') ||
+        msg.toLowerCase().includes('validation_failed')
+      ) {
+        setAuthError(
+          'Google sign-in is not yet configured. To enable it, go to your Supabase dashboard → Authentication → Providers → Google, enable the Google provider, and add your OAuth credentials.'
+        );
+      } else {
+        setAuthError(msg || 'Google sign-in failed. Please try again.');
+      }
     }
   };
 
