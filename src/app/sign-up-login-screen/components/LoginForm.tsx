@@ -19,7 +19,7 @@ interface LoginFormProps {
 
 export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState('');
@@ -47,6 +47,16 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setAuthError('');
+    try {
+      await signInWithGoogle();
+      // Redirect is handled by Supabase OAuth flow
+    } catch (error: any) {
+      setAuthError(error?.message || 'Google sign-in failed. Please try again.');
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div>
@@ -58,6 +68,7 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
+          onClick={handleGoogleSignIn}
           className="btn-ghost flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24">

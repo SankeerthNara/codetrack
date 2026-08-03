@@ -67,6 +67,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return data;
   };
 
+  // Google OAuth Sign In
+  const signInWithGoogle = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      },
+    });
+    if (error) throw error;
+    return data;
+  };
+
   // Sign Out
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -103,6 +115,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     getCurrentUser,
     isEmailVerified,
