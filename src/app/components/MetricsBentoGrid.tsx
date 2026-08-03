@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Code2,
   GitPullRequest,
@@ -10,13 +12,10 @@ import {
   TrendingDown,
   Minus,
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/AppIcon';
 
-
-// Bento grid plan:
-// 6 metric cards → grid-cols-4
-// Row 1: hero (LeetCode solved) spans col-span-2, Codeforces rating, GitHub PRs
-// Row 2: Streak, Acceptance Rate, Active Days
 
 interface MetricCardProps {
   id: string;
@@ -30,6 +29,7 @@ interface MetricCardProps {
   colSpan?: string;
   children?: React.ReactNode;
   alertState?: boolean;
+  skeleton?: boolean;
 }
 
 function MetricCard({
@@ -43,7 +43,25 @@ function MetricCard({
   colSpan = '',
   children,
   alertState,
+  skeleton,
 }: MetricCardProps) {
+  if (skeleton) {
+    return (
+      <div className={`relative bg-card border border-border rounded-xl p-5 flex flex-col gap-3 overflow-hidden animate-pulse ${colSpan}`}>
+        <div className="flex items-start justify-between">
+          <div className="w-9 h-9 rounded-lg bg-secondary" />
+          <div className="h-4 w-20 bg-secondary rounded" />
+        </div>
+        <div>
+          <div className="h-3 w-28 bg-secondary rounded mb-2" />
+          <div className="h-8 w-20 bg-secondary rounded" />
+          <div className="h-3 w-32 bg-secondary rounded mt-2" />
+        </div>
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div
       className={`
@@ -87,138 +105,179 @@ function MetricCard({
   );
 }
 
+interface LeetCodeStats {
+  solved: { total: number; easy: number; medium: number; hard: number };
+  calendar: { streak: number; totalActiveDays: number };
+  contest: { rating: number } | null;
+}
+
 export default function MetricsBentoGrid() {
+  const { user } = useAuth();
+  const [lcStats, setLcStats] = useState<LeetCodeStats | null>(null);
+  const [lcLoading, setLcLoading] = useState(true);
+
+  const fetchLeetCodeStats = useCallback(async () => {
+    if (!user) { setLcLoading(false); return; }
+    try {
+      const supabase = createClient();
+      const { data: conn } = await supabase
+        .from('platform_connections')
+        .select('username')
+        .eq('user_id', user.id)
+        .eq('platform', 'leetcode')
+        .single();
+
+      if (!conn?.username) { setLcLoading(false); return; }
+
+      const res = await fetch(`/api/leetcode?username=${encodeURIComponent(conn.username)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLcStats(data);
+      }
+    } catch {
+      // silently fail — show placeholders
+    } finally {
+      setLcLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchLeetCodeStats();
+  }, [fetchLeetCodeStats]);
+
+  // Derived values
+  const totalSolved = lcStats?.solved.total ?? 0;
+  const easySolved = lcStats?.solved.easy ?? 0;
+  const mediumSolved = lcStats?.solved.medium ?? 0;
+  const hardSolved = lcStats?.solved.hard ?? 0;
+  const streak = lcStats?.calendar.streak ?? 0;
+  const activeDays = lcStats?.calendar.totalActiveDays ?? 0;
+  const contestRating = lcStats?.contest?.rating ?? null;
+
+  const easyPct = totalSolved > 0 ? ((easySolved / totalSolved) * 100).toFixed(1) : '0';
+  const mediumPct = totalSolved > 0 ? ((mediumSolved / totalSolved) * 100).toFixed(1) : '0';
+  const hardPct = totalSolved > 0 ? ((hardSolved / totalSolved) * 100).toFixed(1) : '0';
+
+  const nextMilestone = streak < 7 ? 7 : streak < 14 ? 14 : streak < 30 ? 30 : streak < 60 ? 60 : streak < 100 ? 100 : streak + 50;
+
+  if (lcLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4">
+        <MetricCard id="sk-1" title="" value="" icon={Code2} iconColor="" colSpan="md:col-span-2 lg:col-span-2" skeleton>
+          <div className="space-y-1.5">
+            <div className="h-2 bg-secondary rounded-full" />
+            <div className="h-2 bg-secondary rounded-full" />
+            <div className="h-2 bg-secondary rounded-full" />
+          </div>
+        </MetricCard>
+        <MetricCard id="sk-2" title="" value="" icon={Zap} iconColor="" skeleton />
+        <MetricCard id="sk-3" title="" value="" icon={GitPullRequest} iconColor="" skeleton />
+        <MetricCard id="sk-4" title="" value="" icon={Flame} iconColor="" skeleton />
+        <MetricCard id="sk-5" title="" value="" icon={Target} iconColor="" skeleton />
+        <MetricCard id="sk-6" title="" value="" icon={CalendarDays} iconColor="" skeleton />
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4">
       {/* Hero: LeetCode Problems Solved — spans 2 cols */}
       <MetricCard
         id="metric-lc-solved"
         title="LeetCode Problems Solved"
-        value="347"
-        subvalue="Easy 142 · Medium 168 · Hard 37"
-        trend={{ direction: 'up', label: '+12 this week' }}
+        value={lcStats ? String(totalSolved) : '—'}
+        subvalue={lcStats ? `Easy ${easySolved} · Medium ${mediumSolved} · Hard ${hardSolved}` : 'Connect LeetCode to see stats'}
+        trend={lcStats ? { direction: 'up', label: `${hardSolved} hard solved` } : undefined}
         icon={Code2}
         iconColor="bg-leetcode/15 text-leetcode"
         bgAccent="#ffa116"
         colSpan="md:col-span-2 lg:col-span-2"
       >
-        {/* Difficulty bar */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <span className="text-2xs text-muted-foreground w-12">Easy</span>
-            <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
-              <div className="h-full bg-success rounded-full" style={{ width: '40.9%' }} />
+        {lcStats && (
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-2xs text-muted-foreground w-12">Easy</span>
+              <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-success rounded-full" style={{ width: `${easyPct}%` }} />
+              </div>
+              <span className="text-2xs text-muted-foreground font-mono w-8 text-right">{easySolved}</span>
             </div>
-            <span className="text-2xs text-muted-foreground font-mono w-8 text-right">142</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-2xs text-muted-foreground w-12">Medium</span>
-            <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
-              <div className="h-full bg-warning rounded-full" style={{ width: '48.4%' }} />
+            <div className="flex items-center gap-2">
+              <span className="text-2xs text-muted-foreground w-12">Medium</span>
+              <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-warning rounded-full" style={{ width: `${mediumPct}%` }} />
+              </div>
+              <span className="text-2xs text-muted-foreground font-mono w-8 text-right">{mediumSolved}</span>
             </div>
-            <span className="text-2xs text-muted-foreground font-mono w-8 text-right">168</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-2xs text-muted-foreground w-12">Hard</span>
-            <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
-              <div className="h-full bg-danger rounded-full" style={{ width: '10.7%' }} />
+            <div className="flex items-center gap-2">
+              <span className="text-2xs text-muted-foreground w-12">Hard</span>
+              <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-danger rounded-full" style={{ width: `${hardPct}%` }} />
+              </div>
+              <span className="text-2xs text-muted-foreground font-mono w-8 text-right">{hardSolved}</span>
             </div>
-            <span className="text-2xs text-muted-foreground font-mono w-8 text-right">37</span>
           </div>
-        </div>
+        )}
       </MetricCard>
 
-      {/* Codeforces Rating */}
+      {/* Codeforces Rating — placeholder (no API yet) */}
       <MetricCard
         id="metric-cf-rating"
         title="Codeforces Rating"
-        value="1,847"
-        subvalue="Expert · Max: 1,923"
-        trend={{ direction: 'down', label: '-76 this month' }}
+        value="—"
+        subvalue="Connect Codeforces to see rating"
         icon={Zap}
         iconColor="bg-codeforces/15 text-codeforces"
         bgAccent="#1890ff"
-        alertState
-      >
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Rank</span>
-          <span className="font-semibold cf-rank-expert">Expert</span>
-        </div>
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Solved</span>
-          <span className="font-mono text-foreground">612</span>
-        </div>
-      </MetricCard>
+      />
 
-      {/* GitHub PRs Merged */}
+      {/* GitHub PRs Merged — placeholder (no API yet) */}
       <MetricCard
         id="metric-gh-prs"
         title="GitHub PRs Merged"
-        value="89"
-        subvalue="23 this month · 8 open"
-        trend={{ direction: 'up', label: '+6 vs last month' }}
+        value="—"
+        subvalue="Connect GitHub to see stats"
         icon={GitPullRequest}
         iconColor="bg-github/10 text-github"
         bgAccent="#e6edf3"
-      >
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Commits (30d)</span>
-          <span className="font-mono text-foreground">247</span>
-        </div>
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">Stars earned</span>
-          <span className="font-mono text-foreground">1,204</span>
-        </div>
-      </MetricCard>
+      />
 
       {/* LeetCode Streak */}
       <MetricCard
         id="metric-lc-streak"
         title="LeetCode Streak"
-        value="23"
-        subvalue="days consecutive"
-        trend={{ direction: 'up', label: 'Personal best!' }}
+        value={lcStats ? String(streak) : '—'}
+        subvalue={lcStats ? 'days consecutive' : 'Connect LeetCode to see streak'}
+        trend={lcStats && streak > 0 ? { direction: 'up', label: 'Keep it up!' } : undefined}
         icon={Flame}
         iconColor="bg-warning/15 text-warning"
         bgAccent="#f59e0b"
       >
-        <div className="streak-active rounded-lg px-3 py-2 text-center">
-          <p className="text-xs text-muted-foreground">Next milestone</p>
-          <p className="text-sm font-bold text-primary tabular-nums">30 days</p>
-        </div>
-      </MetricCard>
-
-      {/* Acceptance Rate */}
-      <MetricCard
-        id="metric-lc-acceptance"
-        title="LeetCode Acceptance"
-        value="68.4%"
-        subvalue="of 507 total submissions"
-        trend={{ direction: 'up', label: '+2.1% vs last month' }}
-        icon={Target}
-        iconColor="bg-primary/15 text-primary"
-        bgAccent="#6ee7b7"
-      >
-        <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-          <div className="h-full bg-primary rounded-full transition-all" style={{ width: '68.4%' }} />
-        </div>
+        {lcStats && streak > 0 && (
+          <div className="streak-active rounded-lg px-3 py-2 text-center">
+            <p className="text-xs text-muted-foreground">Next milestone</p>
+            <p className="text-sm font-bold text-primary tabular-nums">{nextMilestone} days</p>
+          </div>
+        )}
       </MetricCard>
 
       {/* Total Active Days */}
       <MetricCard
         id="metric-active-days"
         title="Total Active Days"
-        value="186"
-        subvalue="across all platforms in 2025"
-        trend={{ direction: 'up', label: '+14 this month' }}
+        value={lcStats ? String(activeDays) : '—'}
+        subvalue={lcStats ? 'active days on LeetCode' : 'Connect LeetCode to see activity'}
+        trend={lcStats && activeDays > 0 ? { direction: 'up', label: 'This year' } : undefined}
         icon={CalendarDays}
         iconColor="bg-info/15 text-info"
         bgAccent="#818cf8"
       >
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground">This week</span>
-          <span className="font-mono text-foreground">6 / 7 days</span>
-        </div>
+        {contestRating !== null && (
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Contest Rating</span>
+            <span className="font-mono text-foreground">{contestRating}</span>
+          </div>
+        )}
       </MetricCard>
     </div>
   );
