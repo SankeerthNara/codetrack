@@ -58,7 +58,7 @@ export default function AppLayout({ children, activePath }: AppLayoutProps) {
             <div className="w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
               <span className="text-primary text-xs font-bold font-mono">CT</span>
             </div>
-            <span className="font-semibold text-foreground text-sm">CodeTrack</span>
+            <span className="font-semibold text-foreground text-sm">ProgressTracker</span>
           </div>
           <button
             onClick={() => setMobileSidebarOpen(true)}

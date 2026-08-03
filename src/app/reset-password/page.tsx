@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm">CT</span>
           </div>
-          <span className="text-foreground font-semibold text-lg">CodeTrack</span>
+          <span className="text-foreground font-semibold text-lg">ProgressTracker</span>
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg space-y-6">
@@ -92,7 +92,7 @@ export default function ResetPasswordPage() {
               <div>
                 <h1 className="text-xl font-semibold text-foreground">Set new password</h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Choose a strong password for your CodeTrack account.
+                  Choose a strong password for your ProgressTracker account.
                 </p>
               </div>
 

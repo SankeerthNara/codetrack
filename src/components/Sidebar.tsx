@@ -118,7 +118,7 @@ export default function Sidebar({
             <AppLogo size={28} />
             {!collapsed && (
               <span className="font-bold text-foreground text-base tracking-tight truncate">
-                CodeTrack
+                ProgressTracker
               </span>
             )}
           </div>
@@ -256,7 +256,7 @@ export default function Sidebar({
         <div className="flex items-center justify-between px-4 py-5 border-b border-border">
           <div className="flex items-center gap-2">
             <AppLogo size={28} />
-            <span className="font-bold text-foreground text-base">CodeTrack</span>
+            <span className="font-bold text-foreground text-base">ProgressTracker</span>
           </div>
           <button
             onClick={onMobileClose}

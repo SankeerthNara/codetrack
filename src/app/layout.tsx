@@ -13,7 +13,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'CodeTrack — Unified Coding Progress Dashboard',
+  title: 'ProgressTracker — Unified Coding Progress Dashboard',
   description:
     'Track your LeetCode problems, GitHub contributions, and Codeforces rating in one place. Connect all three platforms and monitor your coding growth daily.',
   icons: {

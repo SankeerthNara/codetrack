@@ -21,7 +21,7 @@ export default function AuthPageClient() {
             <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
               <span className="text-primary text-sm font-bold font-mono">CT</span>
             </div>
-            <span className="font-bold text-foreground text-lg">CodeTrack</span>
+            <span className="font-bold text-foreground text-lg">ProgressTracker</span>
           </div>
 
           {/* Tabs */}
