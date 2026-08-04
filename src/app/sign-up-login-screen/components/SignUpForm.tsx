@@ -54,7 +54,22 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
     setIsLoading(true);
     setAuthError('');
     try {
-      await signUp(data.email, data.password, { fullName: data.fullName });
+      const supabase = (await import('@/lib/supabase/client')).createClient();
+      const { error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+      // Sign out immediately so no session exists until email is confirmed.
+      // This enforces email verification at the code level regardless of
+      // whether "Confirm email" is enabled in the Supabase dashboard.
+      await supabase.auth.signOut();
       router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
     } catch (error: any) {
       setAuthError(error?.message || 'Failed to create account. Please try again.');
