@@ -42,7 +42,12 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
   const isAuthPage = pathname.startsWith('/sign-up-login-screen');
-  const isPublicPath = isAuthPage || pathname.startsWith('/auth/');
+  const isVerifyEmailPage = pathname.startsWith('/verify-email');
+  const isPublicPath =
+    isAuthPage ||
+    isVerifyEmailPage ||
+    pathname.startsWith('/auth/') ||
+    pathname.startsWith('/api/');
 
   // Redirect unauthenticated users to login (except auth pages)
   if (!user && !isPublicPath) {
