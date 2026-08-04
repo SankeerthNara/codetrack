@@ -16,6 +16,8 @@ export async function GET(request: NextRequest) {
       if (type === 'recovery') {
         return NextResponse.redirect(`${origin}/reset-password`);
       }
+      // For email confirmation, redirect to dashboard
+      // Middleware will handle blocking if somehow unverified
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

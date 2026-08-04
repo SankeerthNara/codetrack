@@ -41,7 +41,32 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
     setIsLoading(true);
     setAuthError('');
     try {
-      await signIn(data.email, data.password);
+      const supabase = createClient();
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (error) throw error;
+
+      // Use server-side API with service role key to reliably check email_verified
+      // (bypasses RLS — client-side queries can silently return null if session isn't propagated yet)
+      const verifyRes = await fetch('/api/auth/check-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: authData.user.id }),
+      });
+
+      const verifyData = await verifyRes.json();
+      const isVerified = verifyData.email_verified === true;
+
+      if (!isVerified) {
+        // Sign out immediately — unverified users must not keep a session
+        await supabase.auth.signOut();
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}&from=login`);
+        return;
+      }
+
       toast.success('Signed in successfully — welcome back!');
       router.push('/');
       router.refresh();

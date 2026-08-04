@@ -13,7 +13,7 @@ export default function AuthBrandPanel() {
       <div className="relative z-10">
         <div className="flex items-center gap-3 mb-12">
           <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-            <span className="text-primary font-bold text-sm font-mono">PT</span>
+            <span className="text-primary font-bold text-sm font-mono">CT</span>
           </div>
           <span className="font-bold text-foreground text-xl tracking-tight">ProgressTracker</span>
         </div>
