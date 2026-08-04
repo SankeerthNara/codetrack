@@ -54,22 +54,31 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
     setIsLoading(true);
     setAuthError('');
     try {
-      const supabase = (await import('@/lib/supabase/client')).createClient();
-      const { error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            full_name: data.fullName,
-          },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+      // Call our server-side signup API which:
+      // 1. Creates the user via Supabase admin (no auto-confirm)
+      // 2. Generates a confirmation link
+      // 3. Sends it via Brevo
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          fullName: data.fullName,
+        }),
       });
-      if (error) throw error;
-      // Sign out immediately so no session exists until email is confirmed.
-      // This enforces email verification at the code level regardless of
-      // whether "Confirm email" is enabled in the Supabase dashboard.
-      await supabase.auth.signOut();
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create account. Please try again.');
+      }
+
+      if (result.success && !result.emailSent) {
+        // User created but email failed — still redirect, they can resend
+        console.warn('Email delivery failed:', result.emailError);
+      }
+
       router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
     } catch (error: any) {
       setAuthError(error?.message || 'Failed to create account. Please try again.');

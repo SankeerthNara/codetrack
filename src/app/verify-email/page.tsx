@@ -3,7 +3,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Mail, RefreshCw, ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
 function VerifyEmailContent() {
@@ -25,15 +24,19 @@ function VerifyEmailContent() {
     if (!email || resending || cooldown > 0) return;
     setResending(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+      // Call our resend API which uses Brevo
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       });
-      if (error) throw error;
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to resend. Please try again.');
+      }
+
       setResent(true);
       setCooldown(60);
       toast.success('Verification email resent! Check your inbox.');
