@@ -120,7 +120,8 @@ export async function POST(req: NextRequest) {
       }),
     });
 
-    const brevoResult = await brevoResponse.json();
+    const brevoText = await brevoResponse.text();
+    const brevoResult = brevoText ? JSON.parse(brevoText) : {};
 
     if (!brevoResponse.ok) {
       console.error('Brevo error:', brevoResult);
