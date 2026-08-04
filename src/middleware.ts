@@ -42,17 +42,40 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
   const isAuthPage = pathname.startsWith('/sign-up-login-screen');
-  const isPublicPath = isAuthPage || pathname.startsWith('/auth/');
+  const isVerifyEmailPage = pathname.startsWith('/verify-email');
+  const isPublicPath = isAuthPage || isVerifyEmailPage || pathname.startsWith('/auth/');
 
-  // Redirect unauthenticated users to login (except auth pages)
+  // Redirect unauthenticated users to login (except public pages)
   if (!user && !isPublicPath) {
     const url = request.nextUrl.clone();
     url.pathname = '/sign-up-login-screen';
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from login page
+  // Block unverified users from accessing the dashboard
+  if (user && !isPublicPath) {
+    const isVerified = !!user.email_confirmed_at;
+    if (!isVerified) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/verify-email';
+      url.searchParams.set('email', user.email ?? '');
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Redirect authenticated + verified users away from login page
   if (user && isAuthPage) {
+    const isVerified = !!user.email_confirmed_at;
+    if (isVerified) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
+    // Unverified user on auth page — let them stay (they may want to re-enter email)
+  }
+
+  // Redirect verified users away from verify-email page
+  if (user && isVerifyEmailPage && !!user.email_confirmed_at) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);

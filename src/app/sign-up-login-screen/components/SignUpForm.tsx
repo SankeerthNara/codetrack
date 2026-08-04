@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, Loader2, AlertCircle, Code2, GitPullRequest, Zap } from 'lucide-react';
-import { toast } from 'sonner';
+
 import { useAuth } from '@/contexts/AuthContext';
 
 interface SignUpFormData {
@@ -55,9 +55,7 @@ export default function SignUpForm({ onSwitchToLogin }: SignUpFormProps) {
     setAuthError('');
     try {
       await signUp(data.email, data.password, { fullName: data.fullName });
-      toast.success(`Welcome to ProgressTracker, ${data.fullName.split(' ')[0]}! Connect your first platform to get started.`);
-      router.push('/platform-connections');
-      router.refresh();
+      router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
     } catch (error: any) {
       setAuthError(error?.message || 'Failed to create account. Please try again.');
     } finally {
