@@ -43,7 +43,10 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isAuthPage = pathname.startsWith('/sign-up-login-screen');
   const isVerifyEmailPage = pathname.startsWith('/verify-email');
-  const isPublicPath = isAuthPage || isVerifyEmailPage || pathname.startsWith('/auth/');
+  const isPublicPath =
+    isAuthPage ||
+    isVerifyEmailPage ||
+    pathname.startsWith('/auth/');
 
   // Redirect unauthenticated users to login (except public pages)
   if (!user && !isPublicPath) {
@@ -54,7 +57,15 @@ export async function middleware(request: NextRequest) {
 
   // Block unverified users from accessing the dashboard
   if (user && !isPublicPath) {
-    const isVerified = !!user.email_confirmed_at;
+    // Check email_verified from user_profiles (our authoritative source)
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('email_verified')
+      .eq('id', user.id)
+      .single();
+
+    const isVerified = profile?.email_verified === true;
+
     if (!isVerified) {
       const url = request.nextUrl.clone();
       url.pathname = '/verify-email';
@@ -65,20 +76,34 @@ export async function middleware(request: NextRequest) {
 
   // Redirect authenticated + verified users away from login page
   if (user && isAuthPage) {
-    const isVerified = !!user.email_confirmed_at;
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('email_verified')
+      .eq('id', user.id)
+      .single();
+
+    const isVerified = profile?.email_verified === true;
     if (isVerified) {
       const url = request.nextUrl.clone();
       url.pathname = '/';
       return NextResponse.redirect(url);
     }
-    // Unverified user on auth page — let them stay (they may want to re-enter email)
+    // Unverified user on auth page — let them stay
   }
 
   // Redirect verified users away from verify-email page
-  if (user && isVerifyEmailPage && !!user.email_confirmed_at) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/';
-    return NextResponse.redirect(url);
+  if (user && isVerifyEmailPage) {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('email_verified')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.email_verified === true) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;
