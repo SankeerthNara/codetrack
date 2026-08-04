@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Mail, RefreshCw, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Mail, RefreshCw, ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
@@ -10,6 +10,7 @@ function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const email = searchParams.get('email') || '';
+  const fromLogin = searchParams.get('from') === 'login';
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
   const [cooldown, setCooldown] = useState(0);
@@ -51,8 +52,12 @@ function VerifyEmailContent() {
           {/* Icon */}
           <div className="flex items-center justify-center mb-6">
             <div className="relative">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                <Mail size={36} className="text-primary" />
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center ${fromLogin ? 'bg-warning/10' : 'bg-primary/10'}`}>
+                {fromLogin ? (
+                  <AlertTriangle size={36} className="text-warning" />
+                ) : (
+                  <Mail size={36} className="text-primary" />
+                )}
               </div>
               <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-success flex items-center justify-center border-2 border-card">
                 <CheckCircle2 size={14} className="text-white" />
@@ -61,21 +66,38 @@ function VerifyEmailContent() {
           </div>
 
           {/* Heading */}
-          <h1 className="text-2xl font-bold text-foreground mb-2">Check your inbox</h1>
-          <p className="text-muted-foreground text-sm leading-relaxed mb-2">
-            We sent a verification link to
-          </p>
-          {email && (
-            <p className="text-foreground font-semibold text-sm mb-4 break-all">{email}</p>
+          {fromLogin ? (
+            <>
+              <h1 className="text-2xl font-bold text-foreground mb-2">Email not verified</h1>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-2">
+                You need to verify your email before you can sign in.
+              </p>
+              {email && (
+                <p className="text-foreground font-semibold text-sm mb-4 break-all">{email}</p>
+              )}
+              <p className="text-muted-foreground text-sm leading-relaxed mb-8">
+                Please check your inbox for the verification link we sent when you signed up, or request a new one below.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold text-foreground mb-2">Check your inbox</h1>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-2">
+                We sent a verification link to
+              </p>
+              {email && (
+                <p className="text-foreground font-semibold text-sm mb-4 break-all">{email}</p>
+              )}
+              <p className="text-muted-foreground text-sm leading-relaxed mb-8">
+                Click the link in the email to verify your account and start using CodeTrack.
+              </p>
+            </>
           )}
-          <p className="text-muted-foreground text-sm leading-relaxed mb-8">
-            Click the link in the email to verify your account and start using ProgressTracker.
-          </p>
 
           {/* Steps */}
           <div className="bg-secondary/50 rounded-xl p-4 mb-8 text-left space-y-3">
             {[
-              { step: '1', text: 'Open the email from ProgressTracker' },
+              { step: '1', text: 'Open the email from CodeTrack' },
               { step: '2', text: 'Click the "Confirm your email" button' },
               { step: '3', text: "You'll be redirected to your dashboard" },
             ].map(({ step, text }) => (
@@ -90,7 +112,7 @@ function VerifyEmailContent() {
 
           {/* Resend */}
           <div className="space-y-3">
-            <p className="text-xs text-muted-foreground">Didn't receive the email? Check your spam folder or</p>
+            <p className="text-xs text-muted-foreground">Didn&apos;t receive the email? Check your spam folder or</p>
             <button
               onClick={handleResend}
               disabled={resending || cooldown > 0}

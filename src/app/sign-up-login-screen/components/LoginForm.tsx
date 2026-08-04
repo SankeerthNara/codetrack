@@ -41,7 +41,16 @@ export default function LoginForm({ onSwitchToSignup }: LoginFormProps) {
     setIsLoading(true);
     setAuthError('');
     try {
-      await signIn(data.email, data.password);
+      const result = await signIn(data.email, data.password);
+      // Check if email is verified before allowing access
+      const confirmedAt = result?.user?.email_confirmed_at;
+      if (!confirmedAt) {
+        // Sign out immediately — unverified users must not get a session
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}&from=login`);
+        return;
+      }
       toast.success('Signed in successfully — welcome back!');
       router.push('/');
       router.refresh();
