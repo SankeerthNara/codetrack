@@ -46,7 +46,8 @@ export async function middleware(request: NextRequest) {
   const isPublicPath =
     isAuthPage ||
     isVerifyEmailPage ||
-    pathname.startsWith('/auth/');
+    pathname.startsWith('/auth/') ||
+    pathname.startsWith('/api/');
 
   // Redirect unauthenticated users to login (except public pages)
   if (!user && !isPublicPath) {
