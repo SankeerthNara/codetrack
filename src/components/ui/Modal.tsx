@@ -12,7 +12,14 @@ interface ModalProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export default function Modal({ open, onClose, title, description, children, size = 'md' }: ModalProps) {
+export default function Modal({
+  open,
+  onClose,
+  title,
+  description,
+  children,
+  size = 'md',
+}: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,16 +48,22 @@ export default function Modal({ open, onClose, title, description, children, siz
     <div
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-fade-in"
-      onClick={(e) => { if (e.target === overlayRef.current) onClose(); }}
+      onClick={(e) => {
+        if (e.target === overlayRef.current) onClose();
+      }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className={`w-full ${sizeClass} bg-card border border-border rounded-xl shadow-2xl animate-slide-up`}>
+      <div
+        className={`w-full ${sizeClass} bg-card border border-border rounded-xl shadow-2xl animate-slide-up`}
+      >
         {/* Header */}
         <div className="flex items-start justify-between px-6 pt-6 pb-4 border-b border-border">
           <div>
-            <h2 id="modal-title" className="text-base font-semibold text-foreground">{title}</h2>
+            <h2 id="modal-title" className="text-base font-semibold text-foreground">
+              {title}
+            </h2>
             {description && <p className="text-sm text-muted-foreground mt-0.5">{description}</p>}
           </div>
           <button

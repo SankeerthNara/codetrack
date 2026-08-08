@@ -19,19 +19,25 @@ interface UsernameFormData {
   apiKey?: string;
 }
 
-const platformDescriptions: Record<string, { description: string; docsUrl: string; fields: string }> = {
+const platformDescriptions: Record<
+  string,
+  { description: string; docsUrl: string; fields: string }
+> = {
   leetcode: {
-    description: 'Enter your LeetCode username to pull problem counts, difficulty breakdown, and submission history.',
+    description:
+      'Enter your LeetCode username to pull problem counts, difficulty breakdown, and submission history.',
     docsUrl: 'https://leetcode.com',
     fields: 'Public username only — no password required',
   },
   github: {
-    description: 'Connect via GitHub OAuth to pull PR counts, commit activity, and repository stats.',
+    description:
+      'Connect via GitHub OAuth to pull PR counts, commit activity, and repository stats.',
     docsUrl: 'https://github.com',
     fields: 'Enter your GitHub username to connect',
   },
   codeforces: {
-    description: 'Enter your Codeforces handle to pull rating, rank, contest history, and problem stats.',
+    description:
+      'Enter your Codeforces handle to pull rating, rank, contest history, and problem stats.',
     docsUrl: 'https://codeforces.com',
     fields: 'Public handle only — no password required',
   },
@@ -55,18 +61,16 @@ export default function ConnectModal({ config, onClose }: ConnectModalProps) {
   const saveConnection = async (username: string) => {
     if (!user) return;
     const supabase = createClient();
-    const { error } = await supabase
-      .from('platform_connections')
-      .upsert(
-        {
-          user_id: user.id,
-          platform: config.platformId,
-          username,
-          connected_at: new Date().toISOString(),
-          last_synced_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id,platform' }
-      );
+    const { error } = await supabase.from('platform_connections').upsert(
+      {
+        user_id: user.id,
+        platform: config.platformId,
+        username,
+        connected_at: new Date().toISOString(),
+        last_synced_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,platform' }
+    );
     if (error) throw error;
   };
 
@@ -135,29 +139,40 @@ export default function ConnectModal({ config, onClose }: ConnectModalProps) {
                 htmlFor="connect-username"
                 className="block text-sm font-medium text-foreground mb-1.5"
               >
-                {config.platformId === 'leetcode' ?'LeetCode Username'
-                  : config.platformId === 'github' ?'GitHub Username' :'Codeforces Handle'}
+                {config.platformId === 'leetcode'
+                  ? 'LeetCode Username'
+                  : config.platformId === 'github'
+                    ? 'GitHub Username'
+                    : 'Codeforces Handle'}
               </label>
               <p className="text-xs text-muted-foreground mb-2">
-                {config.platformId === 'leetcode' ?'Your public LeetCode profile username — found at leetcode.com/[username]'
-                  : config.platformId === 'github' ?'Your GitHub username — found at github.com/[username]' :'Your Codeforces handle — found at codeforces.com/profile/[handle]'}
+                {config.platformId === 'leetcode'
+                  ? 'Your public LeetCode profile username — found at leetcode.com/[username]'
+                  : config.platformId === 'github'
+                    ? 'Your GitHub username — found at github.com/[username]'
+                    : 'Your Codeforces handle — found at codeforces.com/profile/[handle]'}
               </p>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                  @
+                </span>
                 <input
                   id="connect-username"
                   type="text"
                   autoComplete="off"
                   placeholder={
-                    config.platformId === 'leetcode' ?'your_lc_username'
-                      : config.platformId === 'github' ?'your_github_username' :'your_cf_handle'
+                    config.platformId === 'leetcode'
+                      ? 'your_lc_username'
+                      : config.platformId === 'github'
+                        ? 'your_github_username'
+                        : 'your_cf_handle'
                   }
                   className={`input-field w-full pl-7 pr-3 py-2.5 text-sm font-mono ${errors.username ? 'input-error' : ''}`}
                   {...register('username', {
                     required: 'Username is required',
                     minLength: { value: 2, message: 'Username must be at least 2 characters' },
                     pattern: {
-                      value: /^[a-zA-Z0-9_\-\.]+$/,
+                      value: /^[a-zA-Z0-9_.-]+$/,
                       message: 'Only letters, numbers, underscores, hyphens, and dots allowed',
                     },
                   })}
@@ -175,7 +190,9 @@ export default function ConnectModal({ config, onClose }: ConnectModalProps) {
                   className="block text-sm font-medium text-foreground mb-1.5"
                 >
                   API Key
-                  <span className="ml-2 text-2xs text-muted-foreground font-normal">(optional — enables private contest data)</span>
+                  <span className="ml-2 text-2xs text-muted-foreground font-normal">
+                    (optional — enables private contest data)
+                  </span>
                 </label>
                 <div className="relative">
                   <input
@@ -238,8 +255,8 @@ export default function ConnectModal({ config, onClose }: ConnectModalProps) {
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
               Syncing stats for{' '}
-              <span className="font-mono text-foreground">@{connectedUsername}</span>
-              {' '}— this usually takes under 30 seconds.
+              <span className="font-mono text-foreground">@{connectedUsername}</span> — this usually
+              takes under 30 seconds.
             </p>
           </div>
           <button

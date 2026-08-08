@@ -106,7 +106,10 @@ export default function ResetPasswordPage() {
               <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                 {/* New Password */}
                 <div>
-                  <label htmlFor="new-password" className="block text-sm font-medium text-foreground mb-1.5">
+                  <label
+                    htmlFor="new-password"
+                    className="block text-sm font-medium text-foreground mb-1.5"
+                  >
                     New password
                   </label>
                   <div className="relative">
@@ -132,7 +135,10 @@ export default function ResetPasswordPage() {
 
                 {/* Confirm Password */}
                 <div>
-                  <label htmlFor="confirm-password" className="block text-sm font-medium text-foreground mb-1.5">
+                  <label
+                    htmlFor="confirm-password"
+                    className="block text-sm font-medium text-foreground mb-1.5"
+                  >
                     Confirm new password
                   </label>
                   <div className="relative">

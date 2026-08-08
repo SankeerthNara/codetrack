@@ -29,7 +29,9 @@ export default function AuthPageClient() {
             <button
               onClick={() => setActiveTab('login')}
               className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                activeTab === 'login' ?'bg-card text-foreground shadow-sm' :'text-muted-foreground hover:text-foreground'
+                activeTab === 'login'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Sign In
@@ -37,7 +39,9 @@ export default function AuthPageClient() {
             <button
               onClick={() => setActiveTab('signup')}
               className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 ${
-                activeTab === 'signup' ?'bg-card text-foreground shadow-sm' :'text-muted-foreground hover:text-foreground'
+                activeTab === 'signup'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               Create Account

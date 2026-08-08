@@ -16,7 +16,6 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/AppIcon';
 
-
 interface MetricCardProps {
   id: string;
   title: string;
@@ -47,7 +46,9 @@ function MetricCard({
 }: MetricCardProps) {
   if (skeleton) {
     return (
-      <div className={`relative bg-card border border-border rounded-xl p-5 flex flex-col gap-3 overflow-hidden animate-pulse ${colSpan}`}>
+      <div
+        className={`relative bg-card border border-border rounded-xl p-5 flex flex-col gap-3 overflow-hidden animate-pulse ${colSpan}`}
+      >
         <div className="flex items-start justify-between">
           <div className="w-9 h-9 rounded-lg bg-secondary" />
           <div className="h-4 w-20 bg-secondary rounded" />
@@ -82,20 +83,31 @@ function MetricCard({
           <Icon size={18} />
         </div>
         {trend && (
-          <div className={`flex items-center gap-1 text-xs font-medium ${
-            trend.direction === 'up' ? 'text-success' :
-            trend.direction === 'down' ? 'text-danger' : 'text-muted-foreground'
-          }`}>
-            {trend.direction === 'up' ? <TrendingUp size={13} /> :
-             trend.direction === 'down' ? <TrendingDown size={13} /> :
-             <Minus size={13} />}
+          <div
+            className={`flex items-center gap-1 text-xs font-medium ${
+              trend.direction === 'up'
+                ? 'text-success'
+                : trend.direction === 'down'
+                  ? 'text-danger'
+                  : 'text-muted-foreground'
+            }`}
+          >
+            {trend.direction === 'up' ? (
+              <TrendingUp size={13} />
+            ) : trend.direction === 'down' ? (
+              <TrendingDown size={13} />
+            ) : (
+              <Minus size={13} />
+            )}
             {trend.label}
           </div>
         )}
       </div>
 
       <div>
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">{title}</p>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+          {title}
+        </p>
         <p className="text-3xl font-bold text-foreground tabular-nums font-mono">{value}</p>
         {subvalue && <p className="text-xs text-muted-foreground mt-1">{subvalue}</p>}
       </div>
@@ -133,7 +145,10 @@ export default function MetricsBentoGrid() {
   const [cfStats, setCfStats] = useState<CodeforcesStats | null>(null);
 
   const fetchLeetCodeStats = useCallback(async () => {
-    if (!user) { setLcLoading(false); return; }
+    if (!user) {
+      setLcLoading(false);
+      return;
+    }
     try {
       const supabase = createClient();
       const { data: conn } = await supabase
@@ -143,7 +158,10 @@ export default function MetricsBentoGrid() {
         .eq('platform', 'leetcode')
         .single();
 
-      if (!conn?.username) { setLcLoading(false); return; }
+      if (!conn?.username) {
+        setLcLoading(false);
+        return;
+      }
 
       const res = await fetch(`/api/leetcode?username=${encodeURIComponent(conn.username)}`);
       if (res.ok) {
@@ -232,12 +250,31 @@ export default function MetricsBentoGrid() {
   const mediumPct = totalSolved > 0 ? ((mediumSolved / totalSolved) * 100).toFixed(1) : '0';
   const hardPct = totalSolved > 0 ? ((hardSolved / totalSolved) * 100).toFixed(1) : '0';
 
-  const nextMilestone = streak < 7 ? 7 : streak < 14 ? 14 : streak < 30 ? 30 : streak < 60 ? 60 : streak < 100 ? 100 : streak + 50;
+  const nextMilestone =
+    streak < 7
+      ? 7
+      : streak < 14
+        ? 14
+        : streak < 30
+          ? 30
+          : streak < 60
+            ? 60
+            : streak < 100
+              ? 100
+              : streak + 50;
 
   if (lcLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-4 gap-4">
-        <MetricCard id="sk-1" title="" value="" icon={Code2} iconColor="" colSpan="md:col-span-2 lg:col-span-2" skeleton>
+        <MetricCard
+          id="sk-1"
+          title=""
+          value=""
+          icon={Code2}
+          iconColor=""
+          colSpan="md:col-span-2 lg:col-span-2"
+          skeleton
+        >
           <div className="space-y-1.5">
             <div className="h-2 bg-secondary rounded-full" />
             <div className="h-2 bg-secondary rounded-full" />
@@ -260,7 +297,11 @@ export default function MetricsBentoGrid() {
         id="metric-lc-solved"
         title="LeetCode Problems Solved"
         value={lcStats ? String(totalSolved) : '—'}
-        subvalue={lcStats ? `Easy ${easySolved} · Medium ${mediumSolved} · Hard ${hardSolved}` : 'Connect LeetCode to see stats'}
+        subvalue={
+          lcStats
+            ? `Easy ${easySolved} · Medium ${mediumSolved} · Hard ${hardSolved}`
+            : 'Connect LeetCode to see stats'
+        }
         trend={lcStats ? { direction: 'up', label: `${hardSolved} hard solved` } : undefined}
         icon={Code2}
         iconColor="bg-leetcode/15 text-leetcode"
@@ -274,21 +315,30 @@ export default function MetricsBentoGrid() {
               <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
                 <div className="h-full bg-success rounded-full" style={{ width: `${easyPct}%` }} />
               </div>
-              <span className="text-2xs text-muted-foreground font-mono w-8 text-right">{easySolved}</span>
+              <span className="text-2xs text-muted-foreground font-mono w-8 text-right">
+                {easySolved}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-2xs text-muted-foreground w-12">Medium</span>
               <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
-                <div className="h-full bg-warning rounded-full" style={{ width: `${mediumPct}%` }} />
+                <div
+                  className="h-full bg-warning rounded-full"
+                  style={{ width: `${mediumPct}%` }}
+                />
               </div>
-              <span className="text-2xs text-muted-foreground font-mono w-8 text-right">{mediumSolved}</span>
+              <span className="text-2xs text-muted-foreground font-mono w-8 text-right">
+                {mediumSolved}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-2xs text-muted-foreground w-12">Hard</span>
               <div className="flex-1 h-1.5 bg-secondary rounded-full overflow-hidden">
                 <div className="h-full bg-danger rounded-full" style={{ width: `${hardPct}%` }} />
               </div>
-              <span className="text-2xs text-muted-foreground font-mono w-8 text-right">{hardSolved}</span>
+              <span className="text-2xs text-muted-foreground font-mono w-8 text-right">
+                {hardSolved}
+              </span>
             </div>
           </div>
         )}
@@ -299,10 +349,14 @@ export default function MetricsBentoGrid() {
         id="metric-cf-rating"
         title="Codeforces Rating"
         value={cfStats?.rating != null ? String(cfStats.rating) : '—'}
-        subvalue={cfStats
-          ? `${cfStats.rank ? cfStats.rank : 'Unrated'}${cfStats.maxRating != null ? ` · Max ${cfStats.maxRating}` : ''}${cfStats.problemsSolved != null && cfStats.problemsSolved > 0 ? ` · ${cfStats.problemsSolved} solved` : ''}`
-          : 'Connect Codeforces to see rating'}
-        trend={cfStats?.rating != null ? { direction: 'neutral', label: cfStats.rank ?? '' } : undefined}
+        subvalue={
+          cfStats
+            ? `${cfStats.rank ? cfStats.rank : 'Unrated'}${cfStats.maxRating != null ? ` · Max ${cfStats.maxRating}` : ''}${cfStats.problemsSolved != null && cfStats.problemsSolved > 0 ? ` · ${cfStats.problemsSolved} solved` : ''}`
+            : 'Connect Codeforces to see rating'
+        }
+        trend={
+          cfStats?.rating != null ? { direction: 'neutral', label: cfStats.rank ?? '' } : undefined
+        }
         icon={Zap}
         iconColor="bg-codeforces/15 text-codeforces"
         bgAccent="#1890ff"
@@ -313,10 +367,16 @@ export default function MetricsBentoGrid() {
         id="metric-gh-prs"
         title="GitHub PRs Merged"
         value={ghStats ? String(ghStats.recentPRsMerged) : '—'}
-        subvalue={ghStats
-          ? `${ghStats.publicRepos} repos · ${ghStats.totalStars} stars`
-          : 'Connect GitHub to see stats'}
-        trend={ghStats && ghStats.recentPRsMerged > 0 ? { direction: 'up', label: 'Recent activity' } : undefined}
+        subvalue={
+          ghStats
+            ? `${ghStats.publicRepos} repos · ${ghStats.totalStars} stars`
+            : 'Connect GitHub to see stats'
+        }
+        trend={
+          ghStats && ghStats.recentPRsMerged > 0
+            ? { direction: 'up', label: 'Recent activity' }
+            : undefined
+        }
         icon={GitPullRequest}
         iconColor="bg-github/10 text-github"
         bgAccent="#e6edf3"

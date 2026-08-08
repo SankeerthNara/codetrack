@@ -4,20 +4,20 @@ import dynamic from 'next/dynamic';
 import React from 'react';
 import { Skeleton } from '@/components/ui/LoadingSkeleton';
 
-const LeetCodeDifficultyChart = dynamic(
-  () => import('./charts/LeetCodeDifficultyChart'),
-  { ssr: false, loading: () => <Skeleton className="h-72 w-full" /> }
-);
+const LeetCodeDifficultyChart = dynamic(() => import('./charts/LeetCodeDifficultyChart'), {
+  ssr: false,
+  loading: () => <Skeleton className="h-72 w-full" />,
+});
 
-const CodeforcesRatingChart = dynamic(
-  () => import('./charts/CodeforcesRatingChart'),
-  { ssr: false, loading: () => <Skeleton className="h-72 w-full" /> }
-);
+const CodeforcesRatingChart = dynamic(() => import('./charts/CodeforcesRatingChart'), {
+  ssr: false,
+  loading: () => <Skeleton className="h-72 w-full" />,
+});
 
-const GitHubCommitsChart = dynamic(
-  () => import('./charts/GitHubCommitsChart'),
-  { ssr: false, loading: () => <Skeleton className="h-72 w-full" /> }
-);
+const GitHubCommitsChart = dynamic(() => import('./charts/GitHubCommitsChart'), {
+  ssr: false,
+  loading: () => <Skeleton className="h-72 w-full" />,
+});
 
 export default function DashboardCharts() {
   return (

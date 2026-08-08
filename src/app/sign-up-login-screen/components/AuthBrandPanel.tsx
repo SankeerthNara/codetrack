@@ -19,11 +19,13 @@ export default function AuthBrandPanel() {
         </div>
 
         <h2 className="text-3xl xl:text-4xl font-bold text-foreground leading-tight tracking-tight mb-4">
-          Your coding progress,<br />
+          Your coding progress,
+          <br />
           <span className="text-primary">unified.</span>
         </h2>
         <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
-          Connect LeetCode, GitHub, and Codeforces. See all your stats, streaks, and ratings in one live dashboard.
+          Connect LeetCode, GitHub, and Codeforces. See all your stats, streaks, and ratings in one
+          live dashboard.
         </p>
       </div>
 
@@ -35,7 +37,9 @@ export default function AuthBrandPanel() {
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">LeetCode</p>
-            <p className="text-xs text-muted-foreground">Track problems solved by difficulty, streaks, and contest ratings</p>
+            <p className="text-xs text-muted-foreground">
+              Track problems solved by difficulty, streaks, and contest ratings
+            </p>
           </div>
         </div>
         <div className="flex items-start gap-3">
@@ -44,7 +48,9 @@ export default function AuthBrandPanel() {
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">GitHub</p>
-            <p className="text-xs text-muted-foreground">Monitor commits, pull requests, and contribution activity</p>
+            <p className="text-xs text-muted-foreground">
+              Monitor commits, pull requests, and contribution activity
+            </p>
           </div>
         </div>
         <div className="flex items-start gap-3">
@@ -53,7 +59,9 @@ export default function AuthBrandPanel() {
           </div>
           <div>
             <p className="text-sm font-semibold text-foreground">Codeforces</p>
-            <p className="text-xs text-muted-foreground">Follow your rating progression and competitive ranking</p>
+            <p className="text-xs text-muted-foreground">
+              Follow your rating progression and competitive ranking
+            </p>
           </div>
         </div>
       </div>

@@ -17,10 +17,7 @@ export async function GET(request: NextRequest) {
 
     if (!error && data?.user) {
       // Mark email as verified in user_profiles
-      await supabase
-        .from('user_profiles')
-        .update({ email_verified: true })
-        .eq('id', data.user.id);
+      await supabase.from('user_profiles').update({ email_verified: true }).eq('id', data.user.id);
 
       // For password recovery, redirect to reset page
       if (type === 'recovery') {
@@ -33,7 +30,5 @@ export async function GET(request: NextRequest) {
   }
 
   // Invalid or expired token — redirect to sign-in with error
-  return NextResponse.redirect(
-    `${origin}/sign-up-login-screen?error=invalid_token`
-  );
+  return NextResponse.redirect(`${origin}/sign-up-login-screen?error=invalid_token`);
 }

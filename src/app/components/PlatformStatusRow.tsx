@@ -79,10 +79,7 @@ export default function PlatformStatusRow() {
           key={p.id}
           className="flex items-center gap-2.5 px-3 py-2 bg-card border border-border rounded-lg text-sm"
         >
-          <span
-            className="w-2 h-2 rounded-full flex-shrink-0"
-            style={{ backgroundColor: p.dot }}
-          />
+          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: p.dot }} />
           <span className="font-medium text-foreground">{p.name}</span>
           {p.username && (
             <span className="text-muted-foreground font-mono text-xs">@{p.username}</span>

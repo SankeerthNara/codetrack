@@ -79,11 +79,15 @@ export default function CodeforcesCard({ onConnect, connection, loading }: Codef
                 <p className="text-xs text-muted-foreground">Competitive programming</p>
               </div>
             </div>
-            <Badge variant="default" dot>Not Connected</Badge>
+            <Badge variant="muted" dot>
+              Not Connected
+            </Badge>
           </div>
         </div>
         <div className="px-5 py-8 flex-1 flex flex-col items-center justify-center text-center gap-3">
-          <p className="text-sm text-muted-foreground">Connect your Codeforces account to track your rating</p>
+          <p className="text-sm text-muted-foreground">
+            Connect your Codeforces account to track your rating
+          </p>
           <button
             onClick={onConnect}
             className="btn-primary flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
@@ -110,7 +114,9 @@ export default function CodeforcesCard({ onConnect, connection, loading }: Codef
               <p className="text-xs text-muted-foreground">Competitive programming</p>
             </div>
           </div>
-          <Badge variant="success" dot>Connected</Badge>
+          <Badge variant="success" dot>
+            Connected
+          </Badge>
         </div>
 
         <div className="mt-3 flex items-center gap-2">
@@ -131,7 +137,9 @@ export default function CodeforcesCard({ onConnect, connection, loading }: Codef
 
       {/* Stats */}
       <div className="px-5 py-4 flex-1 space-y-3">
-        <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">Account Connected</p>
+        <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground">
+          Account Connected
+        </p>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Zap size={12} className="text-success" />
           <span>Stats will sync automatically</span>

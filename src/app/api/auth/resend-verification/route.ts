@@ -26,9 +26,12 @@ export async function POST(req: NextRequest) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Generate a new signup confirmation link for the existing user
+    // Generate a new confirmation link for the existing (already-created) user.
+    // Note: 'signup' requires a password param (it can create a new user), which
+    // we don't have here — 'magiclink' is the correct type for an existing user
+    // and still confirms their email when the link is clicked.
     const { data: linkData, error: linkError } = await adminSupabase.auth.admin.generateLink({
-      type: 'signup',
+      type: 'magiclink',
       email,
       options: {
         redirectTo: `${siteUrl}/auth/confirm`,
@@ -44,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     const tokenHash = linkData.properties.hashed_token;
-    const confirmationUrl = `${siteUrl}/auth/confirm?token_hash=${tokenHash}&type=signup`;
+    const confirmationUrl = `${siteUrl}/auth/confirm?token_hash=${tokenHash}&type=magiclink`;
 
     const htmlContent = `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 24px; background: #0f0f0f; color: #e5e5e5; border-radius: 16px; border: 1px solid #262626;">

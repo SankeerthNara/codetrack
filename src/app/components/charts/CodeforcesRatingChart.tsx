@@ -31,7 +31,18 @@ const CustomTooltip = ({
 }) => {
   if (active && payload && payload.length) {
     const val = payload[0].value;
-    const rank = val >= 2400 ? 'International Grandmaster' : val >= 2100 ? 'Grandmaster' : val >= 1900 ? 'Candidate Master' : val >= 1600 ? 'Expert' : val >= 1400 ? 'Specialist' : 'Pupil';
+    const rank =
+      val >= 2400
+        ? 'International Grandmaster'
+        : val >= 2100
+          ? 'Grandmaster'
+          : val >= 1900
+            ? 'Candidate Master'
+            : val >= 1600
+              ? 'Expert'
+              : val >= 1400
+                ? 'Specialist'
+                : 'Pupil';
     return (
       <div className="bg-card border border-border rounded-lg px-3 py-2.5 shadow-xl">
         <p className="text-xs text-muted-foreground mb-1">{label}</p>
@@ -52,7 +63,11 @@ export default function CodeforcesRatingChart() {
   const [notConnected, setNotConnected] = useState(false);
 
   const fetchData = useCallback(async () => {
-    if (!user) { setLoading(false); setNotConnected(true); return; }
+    if (!user) {
+      setLoading(false);
+      setNotConnected(true);
+      return;
+    }
     try {
       const supabase = createClient();
       const { data: conn } = await supabase
@@ -62,7 +77,11 @@ export default function CodeforcesRatingChart() {
         .eq('platform', 'codeforces')
         .single();
 
-      if (!conn?.username) { setLoading(false); setNotConnected(true); return; }
+      if (!conn?.username) {
+        setLoading(false);
+        setNotConnected(true);
+        return;
+      }
 
       const res = await fetch(`/api/codeforces?handle=${encodeURIComponent(conn.username)}`);
       if (res.ok) {
@@ -97,10 +116,10 @@ export default function CodeforcesRatingChart() {
             {loading
               ? 'Loading...'
               : notConnected
-              ? 'Connect Codeforces to see data'
-              : ratingHistory.length === 0
-              ? 'No contest history found'
-              : `Last ${ratingHistory.length} contests · Current: ${currentRating?.toLocaleString() ?? '—'}`}
+                ? 'Connect Codeforces to see data'
+                : ratingHistory.length === 0
+                  ? 'No contest history found'
+                  : `Last ${ratingHistory.length} contests · Current: ${currentRating?.toLocaleString() ?? '—'}`}
           </p>
         </div>
         {!loading && !notConnected && ratingHistory.length > 0 && (
@@ -126,7 +145,9 @@ export default function CodeforcesRatingChart() {
         ) : notConnected || ratingHistory.length === 0 ? (
           <div className="h-full flex items-center justify-center">
             <p className="text-xs text-muted-foreground">
-              {notConnected ? 'Connect Codeforces to see rating history' : 'No contest history found'}
+              {notConnected
+                ? 'Connect Codeforces to see rating history'
+                : 'No contest history found'}
             </p>
           </div>
         ) : (
@@ -147,7 +168,12 @@ export default function CodeforcesRatingChart() {
               />
               <Tooltip content={<CustomTooltip />} />
               {maxRating && (
-                <ReferenceLine y={maxRating} stroke="var(--warning)" strokeDasharray="4 4" strokeWidth={1} />
+                <ReferenceLine
+                  y={maxRating}
+                  stroke="var(--warning)"
+                  strokeDasharray="4 4"
+                  strokeWidth={1}
+                />
               )}
               <Line
                 type="monotone"

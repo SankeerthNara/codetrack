@@ -1,15 +1,7 @@
 'use client';
 
 import React from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Backend integration point: replace with GitHub GraphQL API contributions data
 const weeklyCommits = [
@@ -40,7 +32,10 @@ const CustomTooltip = ({
         <p className="text-xs text-muted-foreground font-medium">Week of {label}</p>
         {payload.map((p) => (
           <div key={`tooltip-${p.name}`} className="flex items-center gap-2 text-xs">
-            <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ backgroundColor: p.color }} />
+            <span
+              className="w-2 h-2 rounded-sm flex-shrink-0"
+              style={{ backgroundColor: p.color }}
+            />
             <span className="text-muted-foreground capitalize">{p.name}:</span>
             <span className="font-bold font-mono text-foreground">{p.value}</span>
           </div>
@@ -57,7 +52,9 @@ export default function GitHubCommitsChart() {
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="text-sm font-semibold text-foreground">GitHub Weekly Activity</p>
-          <p className="text-xs text-muted-foreground">Commits and PRs merged over the last 10 weeks</p>
+          <p className="text-xs text-muted-foreground">
+            Commits and PRs merged over the last 10 weeks
+          </p>
         </div>
         <div className="flex items-center gap-4 text-xs">
           <span className="flex items-center gap-1.5 text-muted-foreground">
@@ -72,7 +69,11 @@ export default function GitHubCommitsChart() {
       </div>
       <div className="flex-1">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={weeklyCommits} margin={{ top: 0, right: 0, bottom: 0, left: -20 }} barGap={2}>
+          <BarChart
+            data={weeklyCommits}
+            margin={{ top: 0, right: 0, bottom: 0, left: -20 }}
+            barGap={2}
+          >
             <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="week"

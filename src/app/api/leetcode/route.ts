@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Referer': 'https://leetcode.com',
+        Referer: 'https://leetcode.com',
         'User-Agent': 'Mozilla/5.0 (compatible; ProgressTracker/1.0)',
       },
       body: JSON.stringify({
@@ -82,15 +82,13 @@ export async function GET(request: NextRequest) {
 
     const matchedUser = json.data?.matchedUser;
     if (!matchedUser) {
-      return NextResponse.json(
-        { error: 'User not found on LeetCode' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found on LeetCode' }, { status: 404 });
     }
 
     const acSubmissions = matchedUser.submitStats?.acSubmissionNum ?? [];
     const findCount = (difficulty: string) =>
-      acSubmissions.find((s: { difficulty: string; count: number }) => s.difficulty === difficulty)?.count ?? 0;
+      acSubmissions.find((s: { difficulty: string; count: number }) => s.difficulty === difficulty)
+        ?.count ?? 0;
 
     const result = {
       username: matchedUser.username,
@@ -132,6 +130,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    return NextResponse.json({ error: `Failed to fetch LeetCode data: ${message}` }, { status: 500 });
+    return NextResponse.json(
+      { error: `Failed to fetch LeetCode data: ${message}` },
+      { status: 500 }
+    );
   }
 }

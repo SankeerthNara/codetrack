@@ -21,7 +21,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/AppIcon';
 
-
 interface NavItem {
   label: string;
   href: string;
@@ -92,8 +91,14 @@ export default function Sidebar({
       title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
       aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      {theme === 'dark' ? <Sun size={18} className="flex-shrink-0" /> : <Moon size={18} className="flex-shrink-0" />}
-      {showLabel && <span className="truncate">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+      {theme === 'dark' ? (
+        <Sun size={18} className="flex-shrink-0" />
+      ) : (
+        <Moon size={18} className="flex-shrink-0" />
+      )}
+      {showLabel && (
+        <span className="truncate">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+      )}
       {collapsed && !showLabel && (
         <span className="absolute left-full ml-3 px-2 py-1 bg-secondary text-foreground text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 border border-border">
           {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
@@ -113,7 +118,9 @@ export default function Sidebar({
         `}
       >
         {/* Logo */}
-        <div className={`flex items-center gap-3 px-4 py-5 border-b border-border ${collapsed ? 'justify-center px-0' : ''}`}>
+        <div
+          className={`flex items-center gap-3 px-4 py-5 border-b border-border ${collapsed ? 'justify-center px-0' : ''}`}
+        >
           <div className="flex items-center gap-2 min-w-0">
             <AppLogo size={28} />
             {!collapsed && (
@@ -234,7 +241,9 @@ export default function Sidebar({
               onClick={onToggleCollapse}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-all text-xs"
             >
-              {collapsed ? <ChevronRight size={14} /> : (
+              {collapsed ? (
+                <ChevronRight size={14} />
+              ) : (
                 <>
                   <ChevronLeft size={14} />
                   <span>Collapse</span>
@@ -262,8 +271,18 @@ export default function Sidebar({
             onClick={onMobileClose}
             className="p-1.5 rounded-md hover:bg-secondary transition-colors"
           >
-            <svg className="w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className="w-4 h-4 text-muted-foreground"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>

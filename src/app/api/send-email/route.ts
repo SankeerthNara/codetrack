@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       headers: {
         'api-key': BREVO_API_KEY,
         'Content-Type': 'application/json',
-        'accept': 'application/json',
+        accept: 'application/json',
       },
       body: JSON.stringify({
         sender: {

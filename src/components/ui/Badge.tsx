@@ -1,6 +1,7 @@
 import React from 'react';
 
-type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'muted' | 'leetcode' | 'github' | 'codeforces';
+type BadgeVariant =
+  'success' | 'warning' | 'danger' | 'info' | 'muted' | 'leetcode' | 'github' | 'codeforces';
 
 interface BadgeProps {
   variant?: BadgeVariant;
@@ -30,12 +31,19 @@ export default function Badge({ variant = 'muted', children, className = '', dot
       `}
     >
       {dot && (
-        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-          variant === 'success' ? 'bg-success' :
-          variant === 'warning' ? 'bg-warning' :
-          variant === 'danger' ? 'bg-danger' :
-          variant === 'info' ? 'bg-info' : 'bg-muted-foreground'
-        }`} />
+        <span
+          className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+            variant === 'success'
+              ? 'bg-success'
+              : variant === 'warning'
+                ? 'bg-warning'
+                : variant === 'danger'
+                  ? 'bg-danger'
+                  : variant === 'info'
+                    ? 'bg-info'
+                    : 'bg-muted-foreground'
+          }`}
+        />
       )}
       {children}
     </span>

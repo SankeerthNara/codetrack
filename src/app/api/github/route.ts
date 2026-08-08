@@ -10,22 +10,34 @@ export async function GET(request: NextRequest) {
 
   try {
     const headers: Record<string, string> = {
-      'Accept': 'application/vnd.github.v3+json',
+      Accept: 'application/vnd.github.v3+json',
       'User-Agent': 'ProgressTracker/1.0',
     };
 
     // Fetch user profile, repos, and merged PRs count in parallel
     const [userRes, reposRes, mergedPRsRes] = await Promise.all([
-      fetch(`https://api.github.com/users/${encodeURIComponent(username)}`, { headers, next: { revalidate: 300 } }),
-      fetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100&sort=updated`, { headers, next: { revalidate: 300 } }),
-      fetch(`https://api.github.com/search/issues?q=author:${encodeURIComponent(username)}+type:pr+is:merged&per_page=1`, { headers, next: { revalidate: 300 } }),
+      fetch(`https://api.github.com/users/${encodeURIComponent(username)}`, {
+        headers,
+        next: { revalidate: 300 },
+      }),
+      fetch(
+        `https://api.github.com/users/${encodeURIComponent(username)}/repos?per_page=100&sort=updated`,
+        { headers, next: { revalidate: 300 } }
+      ),
+      fetch(
+        `https://api.github.com/search/issues?q=author:${encodeURIComponent(username)}+type:pr+is:merged&per_page=1`,
+        { headers, next: { revalidate: 300 } }
+      ),
     ]);
 
     if (!userRes.ok) {
       if (userRes.status === 404) {
         return NextResponse.json({ error: 'GitHub user not found' }, { status: 404 });
       }
-      return NextResponse.json({ error: `GitHub API error: ${userRes.status}` }, { status: userRes.status });
+      return NextResponse.json(
+        { error: `GitHub API error: ${userRes.status}` },
+        { status: userRes.status }
+      );
     }
 
     const userData = await userRes.json();
@@ -34,7 +46,10 @@ export async function GET(request: NextRequest) {
 
     // Calculate stats from public data
     const totalStars = Array.isArray(reposData)
-      ? reposData.reduce((sum: number, r: { stargazers_count: number }) => sum + (r.stargazers_count ?? 0), 0)
+      ? reposData.reduce(
+          (sum: number, r: { stargazers_count: number }) => sum + (r.stargazers_count ?? 0),
+          0
+        )
       : 0;
 
     const totalForks = Array.isArray(reposData)
@@ -56,17 +71,21 @@ export async function GET(request: NextRequest) {
       ? eventsData.filter((e: { type: string }) => e.type === 'PushEvent')
       : [];
 
-    const recentCommits = pushEvents.slice(0, 5).map((e: {
-      id: string;
-      repo: { name: string };
-      payload: { commits: Array<{ message: string }> };
-      created_at: string;
-    }) => ({
-      id: e.id,
-      repo: e.repo?.name ?? '',
-      message: e.payload?.commits?.[0]?.message ?? 'Pushed commits',
-      createdAt: e.created_at,
-    }));
+    const recentCommits = pushEvents
+      .slice(0, 5)
+      .map(
+        (e: {
+          id: string;
+          repo: { name: string };
+          payload: { commits: Array<{ message: string }> };
+          created_at: string;
+        }) => ({
+          id: e.id,
+          repo: e.repo?.name ?? '',
+          message: e.payload?.commits?.[0]?.message ?? 'Pushed commits',
+          createdAt: e.created_at,
+        })
+      );
 
     return NextResponse.json({
       username: userData.login,

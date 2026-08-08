@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 
@@ -37,7 +37,7 @@ async function isEmailVerified(userId: string): Promise<boolean> {
 
 export async function middleware(request: NextRequest) {
   injectTokenFromHeader(request);
-  let supabaseResponse = NextResponse.next({ request });
+  const supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set(name, value);
             supabaseResponse.cookies.set(name, value, options);

@@ -55,7 +55,9 @@ function VerifyEmailContent() {
           {/* Icon */}
           <div className="flex items-center justify-center mb-6">
             <div className="relative">
-              <div className={`w-20 h-20 rounded-full flex items-center justify-center ${fromLogin ? 'bg-warning/10' : 'bg-primary/10'}`}>
+              <div
+                className={`w-20 h-20 rounded-full flex items-center justify-center ${fromLogin ? 'bg-warning/10' : 'bg-primary/10'}`}
+              >
                 {fromLogin ? (
                   <AlertTriangle size={36} className="text-warning" />
                 ) : (
@@ -79,7 +81,8 @@ function VerifyEmailContent() {
                 <p className="text-foreground font-semibold text-sm mb-4 break-all">{email}</p>
               )}
               <p className="text-muted-foreground text-sm leading-relaxed mb-8">
-                Please check your inbox for the verification link we sent when you signed up, or request a new one below.
+                Please check your inbox for the verification link we sent when you signed up, or
+                request a new one below.
               </p>
             </>
           ) : (
@@ -115,7 +118,9 @@ function VerifyEmailContent() {
 
           {/* Resend */}
           <div className="space-y-3">
-            <p className="text-xs text-muted-foreground">Didn&apos;t receive the email? Check your spam folder or</p>
+            <p className="text-xs text-muted-foreground">
+              Didn&apos;t receive the email? Check your spam folder or
+            </p>
             <button
               onClick={handleResend}
               disabled={resending || cooldown > 0}
@@ -126,7 +131,11 @@ function VerifyEmailContent() {
               ) : (
                 <RefreshCw size={15} />
               )}
-              {cooldown > 0 ? `Resend in ${cooldown}s` : resent ? 'Resend again' : 'Resend verification email'}
+              {cooldown > 0
+                ? `Resend in ${cooldown}s`
+                : resent
+                  ? 'Resend again'
+                  : 'Resend verification email'}
             </button>
 
             <button
@@ -150,11 +159,13 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
       <VerifyEmailContent />
     </Suspense>
   );

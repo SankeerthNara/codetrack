@@ -2,15 +2,31 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import AppLayout from '@/components/AppLayout';
-import { Code2, GitPullRequest, Zap, Link2, Unlink, RefreshCw, ExternalLink, TrendingUp, Users, Flame, Trophy, Target, Activity,  } from 'lucide-react';
+import {
+  Code2,
+  GitPullRequest,
+  Zap,
+  Link2,
+  Unlink,
+  RefreshCw,
+  ExternalLink,
+  TrendingUp,
+  Users,
+  Flame,
+  Trophy,
+  Target,
+  Activity,
+} from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import ConnectModal from '@/app/platform-connections/components/ConnectModal';
-import type { ConnectModalConfig, PlatformConnection } from '@/app/platform-connections/components/PlatformCardList';
+import type {
+  ConnectModalConfig,
+  PlatformConnection,
+} from '@/app/platform-connections/components/PlatformCardList';
 import { toast } from 'sonner';
 import Icon from '@/components/ui/AppIcon';
-
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -51,7 +67,15 @@ interface AggStatCardProps {
   skeleton?: boolean;
 }
 
-function AggStatCard({ label, value, sub, icon: Icon, iconClass, accentClass, skeleton }: AggStatCardProps) {
+function AggStatCard({
+  label,
+  value,
+  sub,
+  icon: Icon,
+  iconClass,
+  accentClass,
+  skeleton,
+}: AggStatCardProps) {
   if (skeleton) {
     return (
       <div className="bg-card border border-border rounded-xl p-4 flex flex-col gap-2 animate-pulse">
@@ -63,12 +87,18 @@ function AggStatCard({ label, value, sub, icon: Icon, iconClass, accentClass, sk
     );
   }
   return (
-    <div className={`bg-card border border-border rounded-xl p-4 flex flex-col gap-1 hover:border-primary/30 transition-all duration-200 relative overflow-hidden`}>
-      <div className={`absolute top-0 right-0 w-24 h-24 rounded-full opacity-5 blur-2xl pointer-events-none ${accentClass}`} />
+    <div
+      className={`bg-card border border-border rounded-xl p-4 flex flex-col gap-1 hover:border-primary/30 transition-all duration-200 relative overflow-hidden`}
+    >
+      <div
+        className={`absolute top-0 right-0 w-24 h-24 rounded-full opacity-5 blur-2xl pointer-events-none ${accentClass}`}
+      />
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${iconClass}`}>
         <Icon size={16} />
       </div>
-      <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground mt-1">{label}</p>
+      <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground mt-1">
+        {label}
+      </p>
       <p className="text-2xl font-bold text-foreground font-mono tabular-nums">{value}</p>
       {sub && <p className="text-xs text-muted-foreground">{sub}</p>}
     </div>
@@ -93,8 +123,18 @@ interface PlatformRowProps {
 }
 
 function PlatformRow({
-  name, description, icon, accentBorder, connection, loading,
-  stats, onConnect, onDisconnect, onResync, isSyncing, profileUrl,
+  name,
+  description,
+  icon,
+  accentBorder,
+  connection,
+  loading,
+  stats,
+  onConnect,
+  onDisconnect,
+  onResync,
+  isSyncing,
+  profileUrl,
 }: PlatformRowProps) {
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -119,7 +159,9 @@ function PlatformRow({
   }
 
   return (
-    <div className={`bg-card border rounded-xl overflow-hidden transition-all duration-200 ${connection ? `${accentBorder} hover:border-opacity-60` : 'border-border'}`}>
+    <div
+      className={`bg-card border rounded-xl overflow-hidden transition-all duration-200 ${connection ? `${accentBorder} hover:border-opacity-60` : 'border-border'}`}
+    >
       {/* Header row */}
       <div className="px-5 pt-5 pb-4 flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -133,26 +175,35 @@ function PlatformRow({
           {connection ? (
             <>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-mono text-muted-foreground">@{connection.username}</span>
+                <span className="text-xs font-mono text-muted-foreground">
+                  @{connection.username}
+                </span>
                 {profileUrl && (
-                  <a href={profileUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                  <a
+                    href={profileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
                     <ExternalLink size={11} />
                   </a>
                 )}
               </div>
-              <Badge variant="success" dot>Connected</Badge>
+              <Badge variant="success" dot>
+                Connected
+              </Badge>
             </>
           ) : (
-            <Badge variant="default" dot>Not Connected</Badge>
+            <Badge variant="muted" dot>
+              Not Connected
+            </Badge>
           )}
         </div>
       </div>
 
       {/* Stats or connect CTA */}
       {connection ? (
-        <div className="px-5 pb-4">
-          {stats}
-        </div>
+        <div className="px-5 pb-4">{stats}</div>
       ) : (
         <div className="px-5 pb-5 flex items-center justify-between gap-3 bg-secondary/30 mx-5 mb-5 rounded-lg px-4 py-3">
           <p className="text-xs text-muted-foreground">Connect to see your stats here</p>
@@ -196,7 +247,10 @@ function PlatformRow({
                 Cancel
               </button>
               <button
-                onClick={() => { onDisconnect(); setShowConfirm(false); }}
+                onClick={() => {
+                  onDisconnect();
+                  setShowConfirm(false);
+                }}
                 className="px-2.5 py-1 rounded-md text-xs bg-danger/20 text-danger hover:bg-danger/30 transition-colors font-semibold"
               >
                 Disconnect
@@ -242,7 +296,9 @@ export default function ConnectedPlatformsPage() {
     setConnectionsLoading(false);
   }, [user]);
 
-  useEffect(() => { loadConnections(); }, [loadConnections]);
+  useEffect(() => {
+    loadConnections();
+  }, [loadConnections]);
 
   // ── Fetch stats when connections load ────────────────────────────────────
   const fetchLCStats = useCallback(async (username: string) => {
@@ -250,7 +306,11 @@ export default function ConnectedPlatformsPage() {
     try {
       const res = await fetch(`/api/leetcode?username=${encodeURIComponent(username)}`);
       if (res.ok) setLcStats(await res.json());
-    } catch { /* silent */ } finally { setLcLoading(false); }
+    } catch {
+      /* silent */
+    } finally {
+      setLcLoading(false);
+    }
   }, []);
 
   const fetchGHStats = useCallback(async (username: string) => {
@@ -259,9 +319,18 @@ export default function ConnectedPlatformsPage() {
       const res = await fetch(`/api/github?username=${encodeURIComponent(username)}`);
       if (res.ok) {
         const d = await res.json();
-        setGhStats({ publicRepos: d.publicRepos ?? 0, totalStars: d.totalStars ?? 0, recentPRsMerged: d.recentPRsMerged ?? 0, followers: d.followers ?? 0 });
+        setGhStats({
+          publicRepos: d.publicRepos ?? 0,
+          totalStars: d.totalStars ?? 0,
+          recentPRsMerged: d.recentPRsMerged ?? 0,
+          followers: d.followers ?? 0,
+        });
       }
-    } catch { /* silent */ } finally { setGhLoading(false); }
+    } catch {
+      /* silent */
+    } finally {
+      setGhLoading(false);
+    }
   }, []);
 
   const fetchCFStats = useCallback(async (handle: string) => {
@@ -270,29 +339,41 @@ export default function ConnectedPlatformsPage() {
       const res = await fetch(`/api/codeforces?handle=${encodeURIComponent(handle)}`);
       if (res.ok) {
         const d = await res.json();
-        setCfStats({ rating: d.rating ?? null, maxRating: d.maxRating ?? null, rank: d.rank ?? null });
+        setCfStats({
+          rating: d.rating ?? null,
+          maxRating: d.maxRating ?? null,
+          rank: d.rank ?? null,
+        });
       }
-    } catch { /* silent */ } finally { setCfLoading(false); }
+    } catch {
+      /* silent */
+    } finally {
+      setCfLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    const lc = connections.find(c => c.platform === 'leetcode');
-    const gh = connections.find(c => c.platform === 'github');
-    const cf = connections.find(c => c.platform === 'codeforces');
+    const lc = connections.find((c) => c.platform === 'leetcode');
+    const gh = connections.find((c) => c.platform === 'github');
+    const cf = connections.find((c) => c.platform === 'codeforces');
     if (lc?.username) fetchLCStats(lc.username);
     if (gh?.username) fetchGHStats(gh.username);
     if (cf?.username) fetchCFStats(cf.username);
   }, [connections, fetchLCStats, fetchGHStats, fetchCFStats]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-  const getConn = (platform: string) => connections.find(c => c.platform === platform) ?? null;
+  const getConn = (platform: string) => connections.find((c) => c.platform === platform) ?? null;
 
   const handleDisconnect = async (platform: string) => {
     if (!user) return;
     const supabase = createClient();
-    await supabase.from('platform_connections').delete().eq('user_id', user.id).eq('platform', platform);
+    await supabase
+      .from('platform_connections')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('platform', platform);
     toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} disconnected`);
-    setConnections(prev => prev.filter(c => c.platform !== platform));
+    setConnections((prev) => prev.filter((c) => c.platform !== platform));
     if (platform === 'leetcode') setLcStats(null);
     if (platform === 'github') setGhStats(null);
     if (platform === 'codeforces') setCfStats(null);
@@ -306,7 +387,11 @@ export default function ConnectedPlatformsPage() {
       if (platform === 'github') await fetchGHStats(conn.username);
       if (platform === 'codeforces') await fetchCFStats(conn.username);
       const supabase = createClient();
-      await supabase.from('platform_connections').update({ last_synced_at: new Date().toISOString() }).eq('user_id', user!.id).eq('platform', platform);
+      await supabase
+        .from('platform_connections')
+        .update({ last_synced_at: new Date().toISOString() })
+        .eq('user_id', user!.id)
+        .eq('platform', platform);
       toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} stats refreshed`);
     }
     setSyncingPlatform(null);
@@ -324,11 +409,12 @@ export default function ConnectedPlatformsPage() {
   return (
     <AppLayout activePath="/connected-platforms">
       <div className="px-6 py-6 xl:px-8 xl:py-7 2xl:px-10 2xl:py-8 max-w-screen-xl mx-auto space-y-7">
-
         {/* ── Page Header ─────────────────────────────────────────────────── */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-foreground tracking-tight">Connected Platforms</h1>
+            <h1 className="text-xl font-bold text-foreground tracking-tight">
+              Connected Platforms
+            </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               Aggregated stats across all your coding platforms — manage connections in one place.
             </p>
@@ -336,19 +422,27 @@ export default function ConnectedPlatformsPage() {
           <div className="flex items-center gap-2 flex-shrink-0">
             <div className="flex items-center gap-1.5 bg-secondary px-3 py-1.5 rounded-lg">
               <Activity size={13} className="text-primary" />
-              <span className="text-xs font-semibold text-foreground">{connectedCount} / 3 Connected</span>
+              <span className="text-xs font-semibold text-foreground">
+                {connectedCount} / 3 Connected
+              </span>
             </div>
           </div>
         </div>
 
         {/* ── Aggregated Stats Bento ───────────────────────────────────────── */}
         <section>
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Aggregated Overview</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+            Aggregated Overview
+          </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             <AggStatCard
               label="Problems Solved"
               value={totalSolved || '—'}
-              sub={lcStats ? `${lcStats.solved.easy}E · ${lcStats.solved.medium}M · ${lcStats.solved.hard}H` : 'LeetCode'}
+              sub={
+                lcStats
+                  ? `${lcStats.solved.easy}E · ${lcStats.solved.medium}M · ${lcStats.solved.hard}H`
+                  : 'LeetCode'
+              }
               icon={Code2}
               iconClass="bg-leetcode/15 text-leetcode"
               accentClass="bg-leetcode"
@@ -366,7 +460,9 @@ export default function ConnectedPlatformsPage() {
             <AggStatCard
               label="Contest Rating"
               value={lcStats?.contest?.rating ? Math.round(lcStats.contest.rating) : '—'}
-              sub={lcStats?.contest ? `Top ${lcStats.contest.topPercentage.toFixed(1)}%` : 'LeetCode'}
+              sub={
+                lcStats?.contest ? `Top ${lcStats.contest.topPercentage.toFixed(1)}%` : 'LeetCode'
+              }
               icon={Trophy}
               iconClass="bg-yellow-500/15 text-yellow-500"
               accentClass="bg-yellow-500"
@@ -404,9 +500,10 @@ export default function ConnectedPlatformsPage() {
 
         {/* ── Platform Cards ───────────────────────────────────────────────── */}
         <section>
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Platform Connections</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
+            Platform Connections
+          </p>
           <div className="space-y-4">
-
             {/* LeetCode */}
             <PlatformRow
               name="LeetCode"
@@ -419,40 +516,71 @@ export default function ConnectedPlatformsPage() {
               accentBorder="border-leetcode/30"
               connection={getConn('leetcode')}
               loading={connectionsLoading}
-              profileUrl={getConn('leetcode') ? `https://leetcode.com/${getConn('leetcode')!.username}` : undefined}
-              onConnect={() => setModalConfig({ platformId: 'leetcode', platformName: 'LeetCode', authType: 'username' })}
+              profileUrl={
+                getConn('leetcode')
+                  ? `https://leetcode.com/${getConn('leetcode')!.username}`
+                  : undefined
+              }
+              onConnect={() =>
+                setModalConfig({
+                  platformId: 'leetcode',
+                  platformName: 'LeetCode',
+                  authType: 'username',
+                })
+              }
               onDisconnect={() => handleDisconnect('leetcode')}
               onResync={() => handleResync('leetcode')}
               isSyncing={syncingPlatform === 'leetcode'}
               stats={
                 lcLoading ? (
                   <div className="grid grid-cols-3 gap-2 animate-pulse">
-                    {[0,1,2].map(i => <div key={i} className="h-14 bg-secondary rounded-lg" />)}
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="h-14 bg-secondary rounded-lg" />
+                    ))}
                   </div>
                 ) : lcStats ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-3 gap-2">
                       <div className="bg-success/10 border border-success/20 rounded-lg px-2 py-2.5 text-center">
-                        <p className="text-base font-bold text-success font-mono">{lcStats.solved.easy}</p>
+                        <p className="text-base font-bold text-success font-mono">
+                          {lcStats.solved.easy}
+                        </p>
                         <p className="text-2xs text-muted-foreground">Easy</p>
                       </div>
                       <div className="bg-warning/10 border border-warning/20 rounded-lg px-2 py-2.5 text-center">
-                        <p className="text-base font-bold text-warning font-mono">{lcStats.solved.medium}</p>
+                        <p className="text-base font-bold text-warning font-mono">
+                          {lcStats.solved.medium}
+                        </p>
                         <p className="text-2xs text-muted-foreground">Medium</p>
                       </div>
                       <div className="bg-danger/10 border border-danger/20 rounded-lg px-2 py-2.5 text-center">
-                        <p className="text-base font-bold text-danger font-mono">{lcStats.solved.hard}</p>
+                        <p className="text-base font-bold text-danger font-mono">
+                          {lcStats.solved.hard}
+                        </p>
                         <p className="text-2xs text-muted-foreground">Hard</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><Flame size={12} className="text-orange-400" />{lcStats.calendar.streak}d streak</span>
-                      <span className="flex items-center gap-1"><Target size={12} className="text-primary" />{lcStats.solved.total} total solved</span>
-                      {lcStats.contest && <span className="flex items-center gap-1"><Trophy size={12} className="text-yellow-500" />Rating {Math.round(lcStats.contest.rating)}</span>}
+                      <span className="flex items-center gap-1">
+                        <Flame size={12} className="text-orange-400" />
+                        {lcStats.calendar.streak}d streak
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Target size={12} className="text-primary" />
+                        {lcStats.solved.total} total solved
+                      </span>
+                      {lcStats.contest && (
+                        <span className="flex items-center gap-1">
+                          <Trophy size={12} className="text-yellow-500" />
+                          Rating {Math.round(lcStats.contest.rating)}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">Stats unavailable — try re-syncing</p>
+                  <p className="text-xs text-muted-foreground">
+                    Stats unavailable — try re-syncing
+                  </p>
                 )
               }
             />
@@ -471,37 +599,53 @@ export default function ConnectedPlatformsPage() {
               accentBorder="border-github/25"
               connection={getConn('github')}
               loading={connectionsLoading}
-              profileUrl={getConn('github') ? `https://github.com/${getConn('github')!.username}` : undefined}
-              onConnect={() => setModalConfig({ platformId: 'github', platformName: 'GitHub', authType: 'oauth' })}
+              profileUrl={
+                getConn('github') ? `https://github.com/${getConn('github')!.username}` : undefined
+              }
+              onConnect={() =>
+                setModalConfig({ platformId: 'github', platformName: 'GitHub', authType: 'oauth' })
+              }
               onDisconnect={() => handleDisconnect('github')}
               onResync={() => handleResync('github')}
               isSyncing={syncingPlatform === 'github'}
               stats={
                 ghLoading ? (
                   <div className="grid grid-cols-4 gap-2 animate-pulse">
-                    {[0,1,2,3].map(i => <div key={i} className="h-14 bg-secondary rounded-lg" />)}
+                    {[0, 1, 2, 3].map((i) => (
+                      <div key={i} className="h-14 bg-secondary rounded-lg" />
+                    ))}
                   </div>
                 ) : ghStats ? (
                   <div className="grid grid-cols-4 gap-2">
                     <div className="bg-secondary/60 rounded-lg px-2 py-2.5 text-center">
-                      <p className="text-base font-bold text-foreground font-mono">{ghStats.publicRepos}</p>
+                      <p className="text-base font-bold text-foreground font-mono">
+                        {ghStats.publicRepos}
+                      </p>
                       <p className="text-2xs text-muted-foreground">Repos</p>
                     </div>
                     <div className="bg-secondary/60 rounded-lg px-2 py-2.5 text-center">
-                      <p className="text-base font-bold text-foreground font-mono">{ghStats.totalStars}</p>
+                      <p className="text-base font-bold text-foreground font-mono">
+                        {ghStats.totalStars}
+                      </p>
                       <p className="text-2xs text-muted-foreground">Stars</p>
                     </div>
                     <div className="bg-secondary/60 rounded-lg px-2 py-2.5 text-center">
-                      <p className="text-base font-bold text-foreground font-mono">{ghStats.recentPRsMerged}</p>
+                      <p className="text-base font-bold text-foreground font-mono">
+                        {ghStats.recentPRsMerged}
+                      </p>
                       <p className="text-2xs text-muted-foreground">PRs Merged</p>
                     </div>
                     <div className="bg-secondary/60 rounded-lg px-2 py-2.5 text-center">
-                      <p className="text-base font-bold text-foreground font-mono">{ghStats.followers}</p>
+                      <p className="text-base font-bold text-foreground font-mono">
+                        {ghStats.followers}
+                      </p>
                       <p className="text-2xs text-muted-foreground">Followers</p>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">Stats unavailable — try re-syncing</p>
+                  <p className="text-xs text-muted-foreground">
+                    Stats unavailable — try re-syncing
+                  </p>
                 )
               }
             />
@@ -518,47 +662,69 @@ export default function ConnectedPlatformsPage() {
               accentBorder="border-codeforces/30"
               connection={getConn('codeforces')}
               loading={connectionsLoading}
-              profileUrl={getConn('codeforces') ? `https://codeforces.com/profile/${getConn('codeforces')!.username}` : undefined}
-              onConnect={() => setModalConfig({ platformId: 'codeforces', platformName: 'Codeforces', authType: 'username' })}
+              profileUrl={
+                getConn('codeforces')
+                  ? `https://codeforces.com/profile/${getConn('codeforces')!.username}`
+                  : undefined
+              }
+              onConnect={() =>
+                setModalConfig({
+                  platformId: 'codeforces',
+                  platformName: 'Codeforces',
+                  authType: 'username',
+                })
+              }
               onDisconnect={() => handleDisconnect('codeforces')}
               onResync={() => handleResync('codeforces')}
               isSyncing={syncingPlatform === 'codeforces'}
               stats={
                 cfLoading ? (
                   <div className="grid grid-cols-3 gap-2 animate-pulse">
-                    {[0,1,2].map(i => <div key={i} className="h-14 bg-secondary rounded-lg" />)}
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} className="h-14 bg-secondary rounded-lg" />
+                    ))}
                   </div>
                 ) : cfStats ? (
                   <div className="space-y-3">
                     <div className="grid grid-cols-3 gap-2">
                       <div className="bg-codeforces/10 border border-codeforces/20 rounded-lg px-2 py-2.5 text-center">
-                        <p className="text-base font-bold text-codeforces font-mono">{cfStats.rating ?? '—'}</p>
+                        <p className="text-base font-bold text-codeforces font-mono">
+                          {cfStats.rating ?? '—'}
+                        </p>
                         <p className="text-2xs text-muted-foreground">Rating</p>
                       </div>
                       <div className="bg-secondary/60 rounded-lg px-2 py-2.5 text-center">
-                        <p className="text-base font-bold text-foreground font-mono">{cfStats.maxRating ?? '—'}</p>
+                        <p className="text-base font-bold text-foreground font-mono">
+                          {cfStats.maxRating ?? '—'}
+                        </p>
                         <p className="text-2xs text-muted-foreground">Max Rating</p>
                       </div>
                       <div className="bg-secondary/60 rounded-lg px-2 py-2.5 text-center">
-                        <p className="text-xs font-bold text-foreground capitalize leading-tight mt-1">{cfStats.rank ?? '—'}</p>
+                        <p className="text-xs font-bold text-foreground capitalize leading-tight mt-1">
+                          {cfStats.rank ?? '—'}
+                        </p>
                         <p className="text-2xs text-muted-foreground">Rank</p>
                       </div>
                     </div>
                     {cfStats.rating && cfStats.maxRating && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <TrendingUp size={12} className="text-success" />
-                        <span>Peak rating: <span className="font-mono text-foreground">{cfStats.maxRating}</span></span>
+                        <span>
+                          Peak rating:{' '}
+                          <span className="font-mono text-foreground">{cfStats.maxRating}</span>
+                        </span>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">Stats unavailable — try re-syncing</p>
+                  <p className="text-xs text-muted-foreground">
+                    Stats unavailable — try re-syncing
+                  </p>
                 )
               }
             />
           </div>
         </section>
-
       </div>
 
       {/* Connect Modal */}

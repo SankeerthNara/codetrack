@@ -1,7 +1,20 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bell, GitPullRequest, MessageSquare, GitCommit, AlertCircle, ExternalLink, Trophy, Clock, Calendar, Code2, Zap, ChevronRight,  } from 'lucide-react';
+import {
+  Bell,
+  GitPullRequest,
+  MessageSquare,
+  GitCommit,
+  AlertCircle,
+  ExternalLink,
+  Trophy,
+  Clock,
+  Calendar,
+  Code2,
+  Zap,
+  ChevronRight,
+} from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -90,17 +103,41 @@ function NotifIcon({ type }: { type: GitHubNotification['type'] }) {
   const base = 'w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0';
   switch (type) {
     case 'PullRequest':
-      return <div className={`${base} bg-primary/10`}><GitPullRequest size={14} className="text-primary" /></div>;
+      return (
+        <div className={`${base} bg-primary/10`}>
+          <GitPullRequest size={14} className="text-primary" />
+        </div>
+      );
     case 'Issue':
-      return <div className={`${base} bg-danger/10`}><AlertCircle size={14} className="text-danger" /></div>;
+      return (
+        <div className={`${base} bg-danger/10`}>
+          <AlertCircle size={14} className="text-danger" />
+        </div>
+      );
     case 'Commit':
-      return <div className={`${base} bg-info/10`}><GitCommit size={14} className="text-info" /></div>;
+      return (
+        <div className={`${base} bg-info/10`}>
+          <GitCommit size={14} className="text-info" />
+        </div>
+      );
     case 'Discussion':
-      return <div className={`${base} bg-accent/10`}><MessageSquare size={14} className="text-accent" /></div>;
+      return (
+        <div className={`${base} bg-accent/10`}>
+          <MessageSquare size={14} className="text-accent" />
+        </div>
+      );
     case 'Release':
-      return <div className={`${base} bg-warning/10`}><Trophy size={14} className="text-warning" /></div>;
+      return (
+        <div className={`${base} bg-warning/10`}>
+          <Trophy size={14} className="text-warning" />
+        </div>
+      );
     default:
-      return <div className={`${base} bg-secondary`}><Bell size={14} className="text-muted-foreground" /></div>;
+      return (
+        <div className={`${base} bg-secondary`}>
+          <Bell size={14} className="text-muted-foreground" />
+        </div>
+      );
   }
 }
 
@@ -117,18 +154,20 @@ function reasonLabel(reason: string) {
 }
 
 function ContestStatusBadge({ status }: { status: Contest['status'] }) {
-  if (status === 'upcoming') return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold bg-primary/10 text-primary border border-primary/20">
-      <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-      Upcoming
-    </span>
-  );
-  if (status === 'ongoing') return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold bg-success/10 text-success border border-success/20">
-      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-      Live
-    </span>
-  );
+  if (status === 'upcoming')
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold bg-primary/10 text-primary border border-primary/20">
+        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+        Upcoming
+      </span>
+    );
+  if (status === 'ongoing')
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold bg-success/10 text-success border border-success/20">
+        <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+        Live
+      </span>
+    );
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-semibold bg-secondary text-muted-foreground border border-border">
       Ended
@@ -200,7 +239,10 @@ function GitHubInboxPanel({ ghUsername, ghLoading, recentCommits }: GitHubInboxP
         </div>
       ) : !ghUsername ? (
         <div className="px-5 py-10 text-center">
-          <svg viewBox="0 0 24 24" className="w-8 h-8 text-muted-foreground fill-current mx-auto mb-3 opacity-40">
+          <svg
+            viewBox="0 0 24 24"
+            className="w-8 h-8 text-muted-foreground fill-current mx-auto mb-3 opacity-40"
+          >
             <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
           </svg>
           <p className="text-sm text-muted-foreground">Connect GitHub to see your activity</p>
@@ -225,9 +267,13 @@ function GitHubInboxPanel({ ghUsername, ghLoading, recentCommits }: GitHubInboxP
                     <GitCommit size={14} className="text-info" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-foreground font-medium leading-snug truncate">{commit.message}</p>
+                    <p className="text-sm text-foreground font-medium leading-snug truncate">
+                      {commit.message}
+                    </p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-2xs text-muted-foreground font-mono truncate">{commit.repo}</span>
+                      <span className="text-2xs text-muted-foreground font-mono truncate">
+                        {commit.repo}
+                      </span>
                       <span className="text-2xs text-muted-foreground">·</span>
                       <span className="text-2xs text-muted-foreground flex items-center gap-1">
                         <Clock size={10} />
@@ -263,10 +309,15 @@ export default function InboxAndContests() {
   const [contestFilter, setContestFilter] = useState<'all' | 'leetcode' | 'codeforces'>('all');
   const [ghUsername, setGhUsername] = useState<string | null>(null);
   const [ghLoading, setGhLoading] = useState(true);
-  const [recentCommits, setRecentCommits] = useState<Array<{ id: string; repo: string; message: string; createdAt: string }>>([]);
+  const [recentCommits, setRecentCommits] = useState<
+    Array<{ id: string; repo: string; message: string; createdAt: string }>
+  >([]);
 
   const fetchGitHubData = useCallback(async () => {
-    if (!user) { setGhLoading(false); return; }
+    if (!user) {
+      setGhLoading(false);
+      return;
+    }
     try {
       const supabase = createClient();
       const { data: conn } = await supabase
@@ -276,7 +327,10 @@ export default function InboxAndContests() {
         .eq('platform', 'github')
         .single();
 
-      if (!conn?.username) { setGhLoading(false); return; }
+      if (!conn?.username) {
+        setGhLoading(false);
+        return;
+      }
       setGhUsername(conn.username);
 
       const res = await fetch(`/api/github?username=${encodeURIComponent(conn.username)}`);
@@ -295,9 +349,10 @@ export default function InboxAndContests() {
     fetchGitHubData();
   }, [fetchGitHubData]);
 
-  const filteredContests = contestFilter === 'all'
-    ? staticContests
-    : staticContests.filter((c) => c.platform === contestFilter);
+  const filteredContests =
+    contestFilter === 'all'
+      ? staticContests
+      : staticContests.filter((c) => c.platform === contestFilter);
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -356,17 +411,22 @@ export default function InboxAndContests() {
                 rel="noopener noreferrer"
                 className="flex items-start gap-3 px-5 py-3.5 hover:bg-secondary/40 transition-colors group"
               >
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                  contest.platform === 'leetcode' ? 'bg-leetcode/10' : 'bg-codeforces/10'
-                }`}>
-                  {contest.platform === 'leetcode'
-                    ? <Code2 size={14} className="text-leetcode" />
-                    : <Zap size={14} className="text-codeforces" />
-                  }
+                <div
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    contest.platform === 'leetcode' ? 'bg-leetcode/10' : 'bg-codeforces/10'
+                  }`}
+                >
+                  {contest.platform === 'leetcode' ? (
+                    <Code2 size={14} className="text-leetcode" />
+                  ) : (
+                    <Zap size={14} className="text-codeforces" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium text-foreground leading-snug truncate">{contest.name}</p>
+                    <p className="text-sm font-medium text-foreground leading-snug truncate">
+                      {contest.name}
+                    </p>
                     <ContestStatusBadge status={contest.status} />
                   </div>
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
@@ -389,7 +449,10 @@ export default function InboxAndContests() {
                     )}
                   </div>
                 </div>
-                <ChevronRight size={14} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
+                <ChevronRight
+                  size={14}
+                  className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1"
+                />
               </a>
             </li>
           ))}

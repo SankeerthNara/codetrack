@@ -98,16 +98,16 @@ export default function SyncEventTimeline() {
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div>
           <h2 className="text-sm font-semibold text-foreground">Sync History</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Recent sync events across all connected platforms</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Recent sync events across all connected platforms
+          </p>
         </div>
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <CheckCircle2 size={11} className="text-success" />
-            6 succeeded
+            <CheckCircle2 size={11} className="text-success" />6 succeeded
           </span>
           <span className="flex items-center gap-1.5">
-            <XCircle size={11} className="text-danger" />
-            2 failed
+            <XCircle size={11} className="text-danger" />2 failed
           </span>
         </div>
       </div>
@@ -118,9 +118,7 @@ export default function SyncEventTimeline() {
             key={event.id}
             className="flex items-start gap-3 px-5 py-3 hover:bg-secondary/20 transition-colors"
           >
-            <div className="mt-0.5 flex-shrink-0">
-              {statusIcon[event.status]}
-            </div>
+            <div className="mt-0.5 flex-shrink-0">{statusIcon[event.status]}</div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">

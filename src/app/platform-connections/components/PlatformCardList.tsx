@@ -59,28 +59,33 @@ export default function PlatformCardList() {
     <>
       <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-5">
         <LeetCodeCard
-          onConnect={() => openModal({ platformId: 'leetcode', platformName: 'LeetCode', authType: 'username' })}
+          onConnect={() =>
+            openModal({ platformId: 'leetcode', platformName: 'LeetCode', authType: 'username' })
+          }
           connection={getConnection('leetcode')}
           loading={loading}
         />
         <GitHubCard
-          onConnect={() => openModal({ platformId: 'github', platformName: 'GitHub', authType: 'oauth' })}
+          onConnect={() =>
+            openModal({ platformId: 'github', platformName: 'GitHub', authType: 'oauth' })
+          }
           connection={getConnection('github')}
           loading={loading}
         />
         <CodeforcesCard
-          onConnect={() => openModal({ platformId: 'codeforces', platformName: 'Codeforces', authType: 'username' })}
+          onConnect={() =>
+            openModal({
+              platformId: 'codeforces',
+              platformName: 'Codeforces',
+              authType: 'username',
+            })
+          }
           connection={getConnection('codeforces')}
           loading={loading}
         />
       </div>
 
-      {modalConfig && (
-        <ConnectModal
-          config={modalConfig}
-          onClose={closeModal}
-        />
-      )}
+      {modalConfig && <ConnectModal config={modalConfig} onClose={closeModal} />}
     </>
   );
 }

@@ -2,8 +2,16 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Code2, RefreshCw, Unlink, ExternalLink, Link2,
-  Trophy, Flame, CheckCircle2, AlertCircle, Clock,
+  Code2,
+  RefreshCw,
+  Unlink,
+  ExternalLink,
+  Link2,
+  Trophy,
+  Flame,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { toast } from 'sonner';
@@ -152,11 +160,15 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
                 <p className="text-xs text-muted-foreground">Algorithm practice platform</p>
               </div>
             </div>
-            <Badge variant="default" dot>Not Connected</Badge>
+            <Badge variant="muted" dot>
+              Not Connected
+            </Badge>
           </div>
         </div>
         <div className="px-5 py-8 flex-1 flex flex-col items-center justify-center text-center gap-3">
-          <p className="text-sm text-muted-foreground">Connect your LeetCode account to track your progress</p>
+          <p className="text-sm text-muted-foreground">
+            Connect your LeetCode account to track your progress
+          </p>
           <button
             onClick={onConnect}
             className="btn-primary flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold"
@@ -183,7 +195,9 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
               <p className="text-xs text-muted-foreground">Algorithm practice platform</p>
             </div>
           </div>
-          <Badge variant="success" dot>Connected</Badge>
+          <Badge variant="success" dot>
+            Connected
+          </Badge>
         </div>
 
         <div className="mt-3 flex items-center gap-2">
@@ -236,15 +250,21 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
               </p>
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-success/10 border border-success/20 rounded-lg px-2 py-2.5 text-center">
-                  <p className="text-lg font-bold text-success font-mono leading-none">{stats.solved.easy}</p>
+                  <p className="text-lg font-bold text-success font-mono leading-none">
+                    {stats.solved.easy}
+                  </p>
                   <p className="text-2xs text-muted-foreground mt-1">Easy</p>
                 </div>
                 <div className="bg-warning/10 border border-warning/20 rounded-lg px-2 py-2.5 text-center">
-                  <p className="text-lg font-bold text-warning font-mono leading-none">{stats.solved.medium}</p>
+                  <p className="text-lg font-bold text-warning font-mono leading-none">
+                    {stats.solved.medium}
+                  </p>
                   <p className="text-2xs text-muted-foreground mt-1">Medium</p>
                 </div>
                 <div className="bg-danger/10 border border-danger/20 rounded-lg px-2 py-2.5 text-center">
-                  <p className="text-lg font-bold text-danger font-mono leading-none">{stats.solved.hard}</p>
+                  <p className="text-lg font-bold text-danger font-mono leading-none">
+                    {stats.solved.hard}
+                  </p>
                   <p className="text-2xs text-muted-foreground mt-1">Hard</p>
                 </div>
               </div>
@@ -256,7 +276,9 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
                 <div className="bg-secondary/60 rounded-lg px-3 py-2.5 flex items-center gap-2">
                   <Trophy size={14} className="text-warning flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-bold text-foreground font-mono leading-none">{stats.contest.rating}</p>
+                    <p className="text-sm font-bold text-foreground font-mono leading-none">
+                      {stats.contest.rating}
+                    </p>
                     <p className="text-2xs text-muted-foreground mt-0.5">Contest Rating</p>
                   </div>
                 </div>
@@ -264,7 +286,9 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
                 <div className="bg-secondary/60 rounded-lg px-3 py-2.5 flex items-center gap-2">
                   <Trophy size={14} className="text-muted-foreground flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-bold text-muted-foreground font-mono leading-none">—</p>
+                    <p className="text-sm font-bold text-muted-foreground font-mono leading-none">
+                      —
+                    </p>
                     <p className="text-2xs text-muted-foreground mt-0.5">No contests</p>
                   </div>
                 </div>
@@ -272,7 +296,9 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
               <div className="bg-secondary/60 rounded-lg px-3 py-2.5 flex items-center gap-2">
                 <Flame size={14} className="text-orange-400 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-bold text-foreground font-mono leading-none">{stats.calendar.streak}</p>
+                  <p className="text-sm font-bold text-foreground font-mono leading-none">
+                    {stats.calendar.streak}
+                  </p>
                   <p className="text-2xs text-muted-foreground mt-0.5">Day Streak</p>
                 </div>
               </div>
@@ -282,7 +308,9 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
             {stats.profile.ranking && (
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Global Ranking</span>
-                <span className="font-mono font-semibold text-foreground">#{stats.profile.ranking.toLocaleString()}</span>
+                <span className="font-mono font-semibold text-foreground">
+                  #{stats.profile.ranking.toLocaleString()}
+                </span>
               </div>
             )}
 
@@ -309,7 +337,9 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <Clock size={10} className="text-muted-foreground" />
-                        <span className="text-2xs text-muted-foreground">{timeAgo(sub.timestamp)}</span>
+                        <span className="text-2xs text-muted-foreground">
+                          {timeAgo(sub.timestamp)}
+                        </span>
                       </div>
                     </a>
                   ))}

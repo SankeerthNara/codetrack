@@ -33,7 +33,10 @@ export default function ActivityFeed() {
   const [lcUsername, setLcUsername] = useState<string | null>(null);
 
   const fetchActivity = useCallback(async () => {
-    if (!user) { setLoading(false); return; }
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const supabase = createClient();
@@ -44,11 +47,17 @@ export default function ActivityFeed() {
         .eq('platform', 'leetcode')
         .single();
 
-      if (!conn?.username) { setLoading(false); return; }
+      if (!conn?.username) {
+        setLoading(false);
+        return;
+      }
       setLcUsername(conn.username);
 
       const res = await fetch(`/api/leetcode?username=${encodeURIComponent(conn.username)}`);
-      if (!res.ok) { setLoading(false); return; }
+      if (!res.ok) {
+        setLoading(false);
+        return;
+      }
 
       const data = await res.json();
       const submissions: ActivityItem[] = (data.recentSubmissions ?? []).map(
@@ -98,12 +107,16 @@ export default function ActivityFeed() {
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
             <h2 className="text-sm font-semibold text-foreground">Recent Activity</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Latest coding events across all platforms</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Latest coding events across all platforms
+            </p>
           </div>
         </div>
         <div className="px-5 py-10 text-center">
           <Code2 size={32} className="text-muted-foreground mx-auto mb-3 opacity-40" />
-          <p className="text-sm text-muted-foreground">Connect LeetCode to see your recent activity</p>
+          <p className="text-sm text-muted-foreground">
+            Connect LeetCode to see your recent activity
+          </p>
         </div>
       </div>
     );
@@ -115,7 +128,9 @@ export default function ActivityFeed() {
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <div>
             <h2 className="text-sm font-semibold text-foreground">Recent Activity</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Latest accepted submissions on LeetCode</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Latest accepted submissions on LeetCode
+            </p>
           </div>
         </div>
         <div className="px-5 py-10 text-center">
@@ -130,7 +145,9 @@ export default function ActivityFeed() {
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div>
           <h2 className="text-sm font-semibold text-foreground">Recent Activity</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Latest accepted submissions on LeetCode</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Latest accepted submissions on LeetCode
+          </p>
         </div>
         <span className="text-xs text-muted-foreground font-mono bg-secondary px-2 py-1 rounded-md">
           {activities.length} solved
@@ -149,8 +166,12 @@ export default function ActivityFeed() {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
-                  <Badge variant="leetcode" className="flex-shrink-0 text-2xs">LeetCode</Badge>
-                  <span className="text-success flex-shrink-0"><CheckCircle2 size={13} /></span>
+                  <Badge variant="leetcode" className="flex-shrink-0 text-2xs">
+                    LeetCode
+                  </Badge>
+                  <span className="text-success flex-shrink-0">
+                    <CheckCircle2 size={13} />
+                  </span>
                 </div>
                 <span className="text-xs text-muted-foreground flex-shrink-0 whitespace-nowrap flex items-center gap-1">
                   <Clock size={10} />

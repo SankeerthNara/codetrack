@@ -12,7 +12,8 @@ export default function NotificationsPage() {
         </div>
         <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
         <p className="text-muted-foreground text-sm text-center max-w-sm">
-          Coming soon — get notified about contest reminders, streak alerts, and platform sync updates.
+          Coming soon — get notified about contest reminders, streak alerts, and platform sync
+          updates.
         </p>
       </div>
     </AppLayout>

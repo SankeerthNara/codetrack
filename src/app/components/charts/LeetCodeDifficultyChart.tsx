@@ -1,13 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import {
-  RadialBarChart,
-  RadialBar,
-  ResponsiveContainer,
-  Tooltip,
-  Legend,
-} from 'recharts';
+import { RadialBarChart, RadialBar, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -17,7 +11,13 @@ interface DifficultyData {
   fill: string;
 }
 
-const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; value: number } }> }) => {
+const CustomTooltip = ({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: { name: string; value: number } }>;
+}) => {
   if (active && payload && payload.length) {
     const d = payload[0].payload;
     return (
@@ -38,7 +38,11 @@ export default function LeetCodeDifficultyChart() {
   const [notConnected, setNotConnected] = useState(false);
 
   const fetchData = useCallback(async () => {
-    if (!user) { setLoading(false); setNotConnected(true); return; }
+    if (!user) {
+      setLoading(false);
+      setNotConnected(true);
+      return;
+    }
     try {
       const supabase = createClient();
       const { data: conn } = await supabase
@@ -48,7 +52,11 @@ export default function LeetCodeDifficultyChart() {
         .eq('platform', 'leetcode')
         .single();
 
-      if (!conn?.username) { setLoading(false); setNotConnected(true); return; }
+      if (!conn?.username) {
+        setLoading(false);
+        setNotConnected(true);
+        return;
+      }
 
       const res = await fetch(`/api/leetcode?username=${encodeURIComponent(conn.username)}`);
       if (res.ok) {
@@ -56,7 +64,7 @@ export default function LeetCodeDifficultyChart() {
         const easy = json.solved?.easy ?? 0;
         const medium = json.solved?.medium ?? 0;
         const hard = json.solved?.hard ?? 0;
-        const totalSolved = json.solved?.total ?? (easy + medium + hard);
+        const totalSolved = json.solved?.total ?? easy + medium + hard;
         setTotal(totalSolved);
         setData([
           { name: 'Hard', value: hard, fill: 'var(--danger)' },
@@ -82,7 +90,11 @@ export default function LeetCodeDifficultyChart() {
       <div className="mb-3">
         <p className="text-sm font-semibold text-foreground">LeetCode Distribution</p>
         <p className="text-xs text-muted-foreground">
-          {loading ? 'Loading...' : notConnected ? 'Connect LeetCode to see data' : `${total} problems solved by difficulty`}
+          {loading
+            ? 'Loading...'
+            : notConnected
+              ? 'Connect LeetCode to see data'
+              : `${total} problems solved by difficulty`}
         </p>
       </div>
       <div className="flex-1">

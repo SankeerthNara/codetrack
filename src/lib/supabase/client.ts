@@ -1,4 +1,4 @@
-import { createBrowserClient } from '@supabase/ssr';
+import { createBrowserClient, type CookieOptions } from '@supabase/ssr';
 
 const PFX = 'sb_';
 
@@ -40,7 +40,7 @@ const fromStorage = () => {
   }
 };
 
-const setCookie = (name: string, value: string, options?: any) => {
+const setCookie = (name: string, value: string, options?: CookieOptions) => {
   let s = `${name}=${encodeURIComponent(value)}; Path=${options?.path || '/'}; SameSite=None; Secure; Partitioned`;
   if (options?.maxAge) s += `; Max-Age=${options.maxAge}`;
   if (options?.domain) s += `; Domain=${options.domain}`;
@@ -66,7 +66,8 @@ const deleteCookie = (name: string) => {
 };
 
 const getToken = () =>
-  (canUseCookies() ? fromCookies() : fromStorage()).find((c) => c.name.includes('auth-token'))?.value ?? null;
+  (canUseCookies() ? fromCookies() : fromStorage()).find((c) => c.name.includes('auth-token'))
+    ?.value ?? null;
 
 if (typeof window !== 'undefined' && !(window as any).__sb_patched__) {
   (window as any).__sb_patched__ = true;
@@ -77,8 +78,8 @@ if (typeof window !== 'undefined' && !(window as any).__sb_patched__) {
       typeof input === 'string'
         ? input
         : input instanceof URL
-        ? input.href
-        : (input as Request).url;
+          ? input.href
+          : (input as Request).url;
     if (token && (url.startsWith('/') || url.startsWith(window.location.origin))) {
       init = { ...(init || {}), headers: { ...(init?.headers || {}), 'x-sb-token': token } };
     }
@@ -93,7 +94,7 @@ export function createClient() {
     {
       cookies: {
         getAll: () => (canUseCookies() ? fromCookies() : fromStorage()),
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           if (typeof document === 'undefined') return;
           if (canUseCookies()) {
             cookiesToSet.forEach(({ name, value, options }) =>
@@ -102,10 +103,14 @@ export function createClient() {
           } else {
             cookiesToSet.forEach(({ name, value, options }) => {
               try {
-                value
-                  ? localStorage.setItem(`${PFX}${name}`, value)
-                  : localStorage.removeItem(`${PFX}${name}`);
-              } catch {}
+                if (value) {
+                  localStorage.setItem(`${PFX}${name}`, value);
+                } else {
+                  localStorage.removeItem(`${PFX}${name}`);
+                }
+              } catch {
+                // localStorage unavailable (e.g. private browsing) — ignore
+              }
               if (value) setCookie(name, value, options);
             });
           }

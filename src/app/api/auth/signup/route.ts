@@ -47,11 +47,16 @@ export async function POST(req: NextRequest) {
 
     if (createError) {
       // If user already exists, try to resend verification
-      if (createError.message?.toLowerCase().includes('already registered') ||
-          createError.message?.toLowerCase().includes('already been registered') ||
-          createError.message?.toLowerCase().includes('user already exists')) {
+      if (
+        createError.message?.toLowerCase().includes('already registered') ||
+        createError.message?.toLowerCase().includes('already been registered') ||
+        createError.message?.toLowerCase().includes('user already exists')
+      ) {
         return NextResponse.json(
-          { error: 'An account with this email already exists. Please sign in or reset your password.' },
+          {
+            error:
+              'An account with this email already exists. Please sign in or reset your password.',
+          },
           { status: 409 }
         );
       }
@@ -75,10 +80,7 @@ export async function POST(req: NextRequest) {
 
     if (linkError || !linkData?.properties?.hashed_token) {
       console.error('generateLink error:', linkError);
-      return NextResponse.json(
-        { error: 'Failed to generate verification link' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to generate verification link' }, { status: 500 });
     }
 
     const tokenHash = linkData.properties.hashed_token;

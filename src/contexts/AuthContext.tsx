@@ -1,4 +1,3 @@
-
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
@@ -30,7 +29,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Listen for auth changes
     const {
-      data: { subscription }
+      data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -41,17 +40,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   // Email/Password Sign Up
-  const signUp = async (email: string, password: string, metadata = {}) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    metadata: { fullName?: string; avatarUrl?: string } = {}
+  ) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: metadata?.fullName || '',
-          avatar_url: metadata?.avatarUrl || ''
+          avatar_url: metadata?.avatarUrl || '',
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback`
-      }
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
     if (error) throw error;
     return data;
@@ -61,7 +64,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
     if (error) throw error;
     return data;
@@ -99,14 +102,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Get Current User
   const getCurrentUser = async () => {
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
     if (error) throw error;
     return user;
   };
 
   // Check if Email is Verified
   const isEmailVerified = () => {
-    return user?.email_confirmed_at !== null;
+    return !!user?.email_confirmed_at;
   };
 
   // Get User Profile from Database
@@ -132,7 +138,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signOut,
     getCurrentUser,
     isEmailVerified,
-    getUserProfile
+    getUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

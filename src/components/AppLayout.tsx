@@ -49,9 +49,7 @@ export default function AppLayout({ children, activePath }: AppLayoutProps) {
       />
 
       {/* Main content */}
-      <div
-        className="flex flex-col flex-1 min-w-0 overflow-hidden transition-all duration-300"
-      >
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden transition-all duration-300">
         {/* Mobile topbar */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border lg:hidden">
           <div className="flex items-center gap-2">
@@ -65,16 +63,24 @@ export default function AppLayout({ children, activePath }: AppLayoutProps) {
             className="p-2 rounded-md hover:bg-secondary transition-colors"
             aria-label="Open navigation menu"
           >
-            <svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg
+              className="w-5 h-5 text-muted-foreground"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
             </svg>
           </button>
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto scrollbar-thin">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto scrollbar-thin">{children}</main>
       </div>
     </div>
   );
