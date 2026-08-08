@@ -81,10 +81,20 @@ export async function middleware(request: NextRequest) {
   if (user && !isPublicPath) {
     const verified = await isEmailVerified(user.id);
     if (!verified) {
+      // Mirror LoginForm's behavior: don't let an unverified session linger —
+      // sign it out and send them to the "email not verified" (not "just signed up") screen.
+      await supabase.auth.signOut();
       const url = request.nextUrl.clone();
       url.pathname = '/verify-email';
       url.searchParams.set('email', user.email ?? '');
-      return NextResponse.redirect(url);
+      url.searchParams.set('from', 'login');
+      const redirectResponse = NextResponse.redirect(url);
+      // signOut() wrote the cleared auth cookies onto supabaseResponse via setAll above —
+      // copy them onto the response we're actually returning, or they'd never reach the browser.
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie);
+      });
+      return redirectResponse;
     }
   }
 
