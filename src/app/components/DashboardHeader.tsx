@@ -1,10 +1,68 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { RefreshCw, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
+import { createClient } from '@/lib/localStorage/client';
+
+interface StoredConnection {
+  platform: 'leetcode' | 'github' | 'codeforces';
+  username: string;
+}
 
 export default function DashboardHeader() {
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleSyncNow = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    try {
+      const supabase = createClient();
+      const { data: connections, error } = await supabase
+        .from('platform_connections')
+        .select('platform, username');
+
+      const connected = (connections ?? []) as StoredConnection[];
+      if (error || connected.length === 0) {
+        toast.error('No connected platforms to sync — connect one first');
+        return;
+      }
+
+      const endpoint: Record<StoredConnection['platform'], string> = {
+        leetcode: '/api/leetcode?username=',
+        github: '/api/github?username=',
+        codeforces: '/api/codeforces?handle=',
+      };
+
+      const results = await Promise.allSettled(
+        connected.map((conn) => fetch(`${endpoint[conn.platform]}${encodeURIComponent(conn.username)}`))
+      );
+      const failures = results.filter((r) => r.status === 'rejected' || !r.value.ok).length;
+
+      const now = new Date().toISOString();
+      await Promise.all(
+        connected.map((conn) =>
+          supabase.from('platform_connections').update({ last_synced_at: now }).eq('platform', conn.platform)
+        )
+      );
+
+      if (failures === connected.length) {
+        toast.error('Sync failed — please try again');
+      } else if (failures > 0) {
+        toast.success(`Synced ${connected.length - failures}/${connected.length} platforms`);
+      } else {
+        toast.success('All platforms synced');
+      }
+
+      window.location.reload();
+    } catch {
+      toast.error('Sync failed — please try again');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
@@ -22,9 +80,13 @@ export default function DashboardHeader() {
           <ExternalLink size={14} />
           Manage Platforms
         </Link>
-        <button className="btn-primary inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold">
-          <RefreshCw size={14} />
-          Sync Now
+        <button
+          onClick={handleSyncNow}
+          disabled={isSyncing}
+          className="btn-primary inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-60"
+        >
+          <RefreshCw size={14} className={isSyncing ? 'animate-spin' : ''} />
+          {isSyncing ? 'Syncing…' : 'Sync Now'}
         </button>
       </div>
     </div>
