@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { GitPullRequest, RefreshCw, Unlink, Clock, ExternalLink, Link2 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { toast } from 'sonner';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/localStorage/client';
 import type { PlatformConnection } from '../PlatformCardList';
 
 interface GitHubCardProps {

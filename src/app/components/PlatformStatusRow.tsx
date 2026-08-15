@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Badge from '@/components/ui/Badge';
 import { CheckCircle2, AlertCircle, Clock } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/localStorage/client';
 
 interface PlatformStatus {
   id: string;
@@ -43,7 +43,7 @@ export default function PlatformStatusRow() {
         .select('platform, username, last_synced_at');
 
       const connMap: Record<string, { username: string; last_synced_at: string | null }> = {};
-      (data ?? []).forEach((row) => {
+      (data ?? []).forEach((row: { platform: string; username: string; last_synced_at: string | null }) => {
         connMap[row.platform] = { username: row.username, last_synced_at: row.last_synced_at };
       });
 

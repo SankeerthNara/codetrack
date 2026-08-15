@@ -5,7 +5,7 @@ import LeetCodeCard from './platform-cards/LeetCodeCard';
 import GitHubCard from './platform-cards/GitHubCard';
 import CodeforcesCard from './platform-cards/CodeforcesCard';
 import ConnectModal from './ConnectModal';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/localStorage/client';
 
 export type PlatformId = 'leetcode' | 'github' | 'codeforces';
 

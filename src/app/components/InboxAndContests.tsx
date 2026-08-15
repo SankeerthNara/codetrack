@@ -15,7 +15,7 @@ import {
   Zap,
   ChevronRight,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/localStorage/client';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

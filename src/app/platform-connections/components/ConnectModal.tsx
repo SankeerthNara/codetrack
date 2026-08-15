@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { Loader2, Eye, EyeOff, CheckCircle2, ExternalLink, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import Modal from '@/components/ui/Modal';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/localStorage/client';
 import type { ConnectModalConfig } from './PlatformCardList';
 
 interface ConnectModalProps {

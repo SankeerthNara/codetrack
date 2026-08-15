@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { RadialBarChart, RadialBar, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/localStorage/client';
 
 interface DifficultyData {
   name: string;

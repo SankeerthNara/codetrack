@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { toast } from 'sonner';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/localStorage/client';
 import type { PlatformConnection } from '../PlatformCardList';
 
 interface LeetCodeCardProps {

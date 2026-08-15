@@ -12,7 +12,7 @@ import {
   TrendingDown,
   Minus,
 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/localStorage/client';
 import Icon from '@/components/ui/AppIcon';
 
 interface MetricCardProps {

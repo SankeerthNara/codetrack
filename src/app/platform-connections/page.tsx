@@ -18,7 +18,7 @@ import {
   Activity,
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/localStorage/client';
 import ConnectModal from './components/ConnectModal';
 import type { ConnectModalConfig, PlatformConnection } from './components/PlatformCardList';
 import { toast } from 'sonner';

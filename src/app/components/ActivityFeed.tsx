@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Badge from '@/components/ui/Badge';
 import { Code2, CheckCircle2, Clock } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/localStorage/client';
 
 interface ActivityItem {
   id: string;
