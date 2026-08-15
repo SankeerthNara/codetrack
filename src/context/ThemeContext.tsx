@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import '@/lib/localApi/installFetchInterceptor';
 
 type Theme = 'dark' | 'light';
 

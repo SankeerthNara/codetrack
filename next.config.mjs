@@ -2,6 +2,9 @@ import { imageHosts } from './image-hosts.config.mjs';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Static export: the Android build has no server, everything is bundled
+  // as static HTML/JS/CSS into the `out/` folder for Capacitor to package.
+  output: 'export',
   productionBrowserSourceMaps: true,
   distDir: process.env.DIST_DIR || '.next',
 
@@ -17,6 +20,9 @@ const nextConfig = {
     remotePatterns: imageHosts,
     minimumCacheTTL: 60,
     qualities: [75, 85, 100],
+    // next/image's optimization API needs a server, which a static export
+    // doesn't have — serve images as-is instead.
+    unoptimized: true,
   },
 
   webpack(config, { dev }) {
