@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import ConnectModal from '@/app/platform-connections/components/ConnectModal';
 import type {
   ConnectModalConfig,
@@ -266,7 +265,6 @@ function PlatformRow({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ConnectedPlatformsPage() {
-  const { user } = useAuth();
   const [connections, setConnections] = useState<PlatformConnection[]>([]);
   const [connectionsLoading, setConnectionsLoading] = useState(true);
   const [modalConfig, setModalConfig] = useState<ConnectModalConfig | null>(null);
@@ -284,17 +282,15 @@ export default function ConnectedPlatformsPage() {
 
   // ── Load connections ──────────────────────────────────────────────────────
   const loadConnections = useCallback(async () => {
-    if (!user) return;
     const supabase = createClient();
     const { data, error } = await supabase
       .from('platform_connections')
-      .select('platform, username, connected_at, last_synced_at')
-      .eq('user_id', user.id);
+      .select('platform, username, connected_at, last_synced_at');
     if (!error && data) {
       setConnections(data as PlatformConnection[]);
     }
     setConnectionsLoading(false);
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     loadConnections();
@@ -365,13 +361,8 @@ export default function ConnectedPlatformsPage() {
   const getConn = (platform: string) => connections.find((c) => c.platform === platform) ?? null;
 
   const handleDisconnect = async (platform: string) => {
-    if (!user) return;
     const supabase = createClient();
-    await supabase
-      .from('platform_connections')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('platform', platform);
+    await supabase.from('platform_connections').delete().eq('platform', platform);
     toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} disconnected`);
     setConnections((prev) => prev.filter((c) => c.platform !== platform));
     if (platform === 'leetcode') setLcStats(null);
@@ -390,7 +381,6 @@ export default function ConnectedPlatformsPage() {
       await supabase
         .from('platform_connections')
         .update({ last_synced_at: new Date().toISOString() })
-        .eq('user_id', user!.id)
         .eq('platform', platform);
       toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} stats refreshed`);
     }

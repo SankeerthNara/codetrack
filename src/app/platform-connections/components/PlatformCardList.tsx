@@ -6,7 +6,6 @@ import GitHubCard from './platform-cards/GitHubCard';
 import CodeforcesCard from './platform-cards/CodeforcesCard';
 import ConnectModal from './ConnectModal';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 export type PlatformId = 'leetcode' | 'github' | 'codeforces';
 
@@ -24,23 +23,20 @@ export interface PlatformConnection {
 }
 
 export default function PlatformCardList() {
-  const { user } = useAuth();
   const [modalConfig, setModalConfig] = useState<ConnectModalConfig | null>(null);
   const [connections, setConnections] = useState<PlatformConnection[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadConnections = useCallback(async () => {
-    if (!user) return;
     const supabase = createClient();
     const { data, error } = await supabase
       .from('platform_connections')
-      .select('platform, username, connected_at, last_synced_at')
-      .eq('user_id', user.id);
+      .select('platform, username, connected_at, last_synced_at');
     if (!error && data) {
       setConnections(data as PlatformConnection[]);
     }
     setLoading(false);
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     loadConnections();

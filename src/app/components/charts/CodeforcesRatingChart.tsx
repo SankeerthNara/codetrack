@@ -12,7 +12,6 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface RatingPoint {
   contestName: string;
@@ -55,7 +54,6 @@ const CustomTooltip = ({
 };
 
 export default function CodeforcesRatingChart() {
-  const { user } = useAuth();
   const [ratingHistory, setRatingHistory] = useState<RatingPoint[]>([]);
   const [currentRating, setCurrentRating] = useState<number | null>(null);
   const [maxRating, setMaxRating] = useState<number | null>(null);
@@ -63,17 +61,11 @@ export default function CodeforcesRatingChart() {
   const [notConnected, setNotConnected] = useState(false);
 
   const fetchData = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      setNotConnected(true);
-      return;
-    }
     try {
       const supabase = createClient();
       const { data: conn } = await supabase
         .from('platform_connections')
         .select('username')
-        .eq('user_id', user.id)
         .eq('platform', 'codeforces')
         .single();
 
@@ -97,7 +89,7 @@ export default function CodeforcesRatingChart() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     fetchData();

@@ -13,7 +13,6 @@ import {
   Minus,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/AppIcon';
 
 interface MetricCardProps {
@@ -138,23 +137,17 @@ interface CodeforcesStats {
 }
 
 export default function MetricsBentoGrid() {
-  const { user } = useAuth();
   const [lcStats, setLcStats] = useState<LeetCodeStats | null>(null);
   const [lcLoading, setLcLoading] = useState(true);
   const [ghStats, setGhStats] = useState<GitHubStats | null>(null);
   const [cfStats, setCfStats] = useState<CodeforcesStats | null>(null);
 
   const fetchLeetCodeStats = useCallback(async () => {
-    if (!user) {
-      setLcLoading(false);
-      return;
-    }
     try {
       const supabase = createClient();
       const { data: conn } = await supabase
         .from('platform_connections')
         .select('username')
-        .eq('user_id', user.id)
         .eq('platform', 'leetcode')
         .single();
 
@@ -173,16 +166,14 @@ export default function MetricsBentoGrid() {
     } finally {
       setLcLoading(false);
     }
-  }, [user]);
+  }, []);
 
   const fetchGitHubStats = useCallback(async () => {
-    if (!user) return;
     try {
       const supabase = createClient();
       const { data: conn } = await supabase
         .from('platform_connections')
         .select('username')
-        .eq('user_id', user.id)
         .eq('platform', 'github')
         .single();
 
@@ -201,16 +192,14 @@ export default function MetricsBentoGrid() {
     } catch {
       // silently fail
     }
-  }, [user]);
+  }, []);
 
   const fetchCodeforcesStats = useCallback(async () => {
-    if (!user) return;
     try {
       const supabase = createClient();
       const { data: conn } = await supabase
         .from('platform_connections')
         .select('username')
-        .eq('user_id', user.id)
         .eq('platform', 'codeforces')
         .single();
 
@@ -229,7 +218,7 @@ export default function MetricsBentoGrid() {
     } catch {
       // silently fail
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     fetchLeetCodeStats();

@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import Badge from '@/components/ui/Badge';
 import { CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface PlatformStatus {
   id: string;
@@ -34,18 +33,14 @@ function timeAgo(dateStr: string | null): string {
 }
 
 export default function PlatformStatusRow() {
-  const { user } = useAuth();
   const [platforms, setPlatforms] = useState<PlatformStatus[]>([]);
 
   useEffect(() => {
-    if (!user) return;
-
     const fetchConnections = async () => {
       const supabase = createClient();
       const { data } = await supabase
         .from('platform_connections')
-        .select('platform, username, last_synced_at')
-        .eq('user_id', user.id);
+        .select('platform, username, last_synced_at');
 
       const connMap: Record<string, { username: string; last_synced_at: string | null }> = {};
       (data ?? []).forEach((row) => {
@@ -68,7 +63,7 @@ export default function PlatformStatusRow() {
     };
 
     fetchConnections();
-  }, [user]);
+  }, []);
 
   if (platforms.length === 0) return null;
 

@@ -4,7 +4,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Badge from '@/components/ui/Badge';
 import { Code2, CheckCircle2, Clock } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface ActivityItem {
   id: string;
@@ -27,23 +26,16 @@ function timeAgo(unixTimestamp: number): string {
 }
 
 export default function ActivityFeed() {
-  const { user } = useAuth();
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [lcUsername, setLcUsername] = useState<string | null>(null);
 
   const fetchActivity = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
     try {
       const supabase = createClient();
       const { data: conn } = await supabase
         .from('platform_connections')
         .select('username')
-        .eq('user_id', user.id)
         .eq('platform', 'leetcode')
         .single();
 
@@ -75,7 +67,7 @@ export default function ActivityFeed() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     fetchActivity();

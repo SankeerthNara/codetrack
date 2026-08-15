@@ -6,7 +6,6 @@ import { Loader2, Eye, EyeOff, CheckCircle2, ExternalLink, Info } from 'lucide-r
 import { toast } from 'sonner';
 import Modal from '@/components/ui/Modal';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import type { ConnectModalConfig } from './PlatformCardList';
 
 interface ConnectModalProps {
@@ -44,7 +43,6 @@ const platformDescriptions: Record<
 };
 
 export default function ConnectModal({ config, onClose }: ConnectModalProps) {
-  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [step, setStep] = useState<'form' | 'success'>('form');
@@ -59,17 +57,15 @@ export default function ConnectModal({ config, onClose }: ConnectModalProps) {
   const info = platformDescriptions[config.platformId];
 
   const saveConnection = async (username: string) => {
-    if (!user) return;
     const supabase = createClient();
     const { error } = await supabase.from('platform_connections').upsert(
       {
-        user_id: user.id,
         platform: config.platformId,
         username,
         connected_at: new Date().toISOString(),
         last_synced_at: new Date().toISOString(),
       },
-      { onConflict: 'user_id,platform' }
+      { onConflict: 'platform' }
     );
     if (error) throw error;
   };

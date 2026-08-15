@@ -16,7 +16,6 @@ import {
 import Badge from '@/components/ui/Badge';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import type { PlatformConnection } from '../PlatformCardList';
 
 interface LeetCodeCardProps {
@@ -67,7 +66,6 @@ function timeAgo(timestamp: number): string {
 }
 
 export default function LeetCodeCard({ onConnect, connection, loading }: LeetCodeCardProps) {
-  const { user } = useAuth();
   const [isSyncing, setIsSyncing] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
   const [stats, setStats] = useState<LeetCodeStats | null>(null);
@@ -102,26 +100,18 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
     if (!connection?.username) return;
     setIsSyncing(true);
     await fetchStats(connection.username);
-    if (user && connection) {
-      const supabase = createClient();
-      await supabase
-        .from('platform_connections')
-        .update({ last_synced_at: new Date().toISOString() })
-        .eq('user_id', user.id)
-        .eq('platform', 'leetcode');
-    }
+    const supabase = createClient();
+    await supabase
+      .from('platform_connections')
+      .update({ last_synced_at: new Date().toISOString() })
+      .eq('platform', 'leetcode');
     toast.success('LeetCode stats refreshed');
     setIsSyncing(false);
   };
 
   const handleDisconnect = async () => {
-    if (!user) return;
     const supabase = createClient();
-    await supabase
-      .from('platform_connections')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('platform', 'leetcode');
+    await supabase.from('platform_connections').delete().eq('platform', 'leetcode');
     toast.success('LeetCode account disconnected');
     setShowDisconnectConfirm(false);
     window.location.reload();

@@ -5,7 +5,6 @@ import { Zap, RefreshCw, Unlink, Clock, ExternalLink, Link2 } from 'lucide-react
 import Badge from '@/components/ui/Badge';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import type { PlatformConnection } from '../PlatformCardList';
 
 interface CodeforcesCardProps {
@@ -15,19 +14,17 @@ interface CodeforcesCardProps {
 }
 
 export default function CodeforcesCard({ onConnect, connection, loading }: CodeforcesCardProps) {
-  const { user } = useAuth();
   const [isSyncing, setIsSyncing] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   const handleResync = async () => {
     setIsSyncing(true);
     await new Promise((r) => setTimeout(r, 2000));
-    if (user && connection) {
+    if (connection) {
       const supabase = createClient();
       await supabase
         .from('platform_connections')
         .update({ last_synced_at: new Date().toISOString() })
-        .eq('user_id', user.id)
         .eq('platform', 'codeforces');
     }
     toast.success('Codeforces stats refreshed successfully');
@@ -35,13 +32,8 @@ export default function CodeforcesCard({ onConnect, connection, loading }: Codef
   };
 
   const handleDisconnect = async () => {
-    if (!user) return;
     const supabase = createClient();
-    await supabase
-      .from('platform_connections')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('platform', 'codeforces');
+    await supabase.from('platform_connections').delete().eq('platform', 'codeforces');
     toast.success('Codeforces account disconnected');
     setShowDisconnectConfirm(false);
     window.location.reload();

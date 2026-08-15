@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import AppLogo from '@/components/ui/AppLogo';
 import {
   LayoutDashboard,
@@ -10,7 +9,6 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  LogOut,
   User,
   Bell,
   Trophy,
@@ -18,7 +16,6 @@ import {
   Moon,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
-import { useAuth } from '@/contexts/AuthContext';
 import Icon from '@/components/ui/AppIcon';
 
 interface NavItem {
@@ -54,8 +51,6 @@ export default function Sidebar({
   onMobileClose,
 }: SidebarProps) {
   const { theme, toggleTheme } = useTheme();
-  const { user, signOut } = useAuth();
-  const router = useRouter();
   const mainItems = navItems.filter((i) => i.group === 'main');
   const accountItems = navItems.filter((i) => i.group === 'account');
 
@@ -63,26 +58,6 @@ export default function Sidebar({
     if (href === '/') return activePath === '/';
     return activePath.startsWith(href);
   };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      router.push('/sign-up-login-screen');
-      router.refresh();
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
-  };
-
-  // Derive display name and initials from user
-  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
-  const displayEmail = user?.email || '';
-  const initials = displayName
-    .split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
 
   const ThemeToggleButton = ({ showLabel }: { showLabel: boolean }) => (
     <button
@@ -209,34 +184,9 @@ export default function Sidebar({
           </div>
         </nav>
 
-        {/* User + collapse */}
+        {/* Collapse control */}
         <div className="border-t border-border">
-          {!collapsed && (
-            <div className="flex items-center gap-3 px-4 py-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-primary text-xs font-bold">{initials}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
-                <p className="text-2xs text-muted-foreground truncate">{displayEmail}</p>
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="p-1.5 rounded-md hover:bg-secondary transition-colors"
-                title="Sign out"
-              >
-                <LogOut size={14} className="text-muted-foreground" />
-              </button>
-            </div>
-          )}
-          {collapsed && (
-            <div className="flex flex-col items-center gap-2 py-3">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-primary text-xs font-bold">{initials}</span>
-              </div>
-            </div>
-          )}
-          <div className="px-2 pb-3">
+          <div className="px-2 py-3">
             <button
               onClick={onToggleCollapse}
               className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-all text-xs"
@@ -337,25 +287,6 @@ export default function Sidebar({
             <ThemeToggleButton showLabel={true} />
           </div>
         </nav>
-
-        <div className="border-t border-border p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-              <span className="text-primary text-xs font-bold">{initials}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
-              <p className="text-2xs text-muted-foreground truncate">{displayEmail}</p>
-            </div>
-            <button
-              onClick={handleSignOut}
-              className="p-1.5 rounded-md hover:bg-secondary transition-colors"
-              title="Sign out"
-            >
-              <LogOut size={14} className="text-muted-foreground" />
-            </button>
-          </div>
-        </div>
       </aside>
     </>
   );

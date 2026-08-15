@@ -16,7 +16,6 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -305,7 +304,6 @@ function GitHubInboxPanel({ ghUsername, ghLoading, recentCommits }: GitHubInboxP
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function InboxAndContests() {
-  const { user } = useAuth();
   const [contestFilter, setContestFilter] = useState<'all' | 'leetcode' | 'codeforces'>('all');
   const [ghUsername, setGhUsername] = useState<string | null>(null);
   const [ghLoading, setGhLoading] = useState(true);
@@ -314,16 +312,11 @@ export default function InboxAndContests() {
   >([]);
 
   const fetchGitHubData = useCallback(async () => {
-    if (!user) {
-      setGhLoading(false);
-      return;
-    }
     try {
       const supabase = createClient();
       const { data: conn } = await supabase
         .from('platform_connections')
         .select('username')
-        .eq('user_id', user.id)
         .eq('platform', 'github')
         .single();
 
@@ -343,7 +336,7 @@ export default function InboxAndContests() {
     } finally {
       setGhLoading(false);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     fetchGitHubData();

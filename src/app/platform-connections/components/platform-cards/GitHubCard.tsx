@@ -5,7 +5,6 @@ import { GitPullRequest, RefreshCw, Unlink, Clock, ExternalLink, Link2 } from 'l
 import Badge from '@/components/ui/Badge';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import type { PlatformConnection } from '../PlatformCardList';
 
 interface GitHubCardProps {
@@ -15,19 +14,17 @@ interface GitHubCardProps {
 }
 
 export default function GitHubCard({ onConnect, connection, loading }: GitHubCardProps) {
-  const { user } = useAuth();
   const [isSyncing, setIsSyncing] = useState(false);
   const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   const handleResync = async () => {
     setIsSyncing(true);
     await new Promise((r) => setTimeout(r, 1800));
-    if (user && connection) {
+    if (connection) {
       const supabase = createClient();
       await supabase
         .from('platform_connections')
         .update({ last_synced_at: new Date().toISOString() })
-        .eq('user_id', user.id)
         .eq('platform', 'github');
     }
     toast.success('GitHub stats refreshed successfully');
@@ -35,13 +32,8 @@ export default function GitHubCard({ onConnect, connection, loading }: GitHubCar
   };
 
   const handleDisconnect = async () => {
-    if (!user) return;
     const supabase = createClient();
-    await supabase
-      .from('platform_connections')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('platform', 'github');
+    await supabase.from('platform_connections').delete().eq('platform', 'github');
     toast.success('GitHub account disconnected');
     setShowDisconnectConfirm(false);
     window.location.reload();

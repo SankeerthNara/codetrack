@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { RadialBarChart, RadialBar, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface DifficultyData {
   name: string;
@@ -31,24 +30,17 @@ const CustomTooltip = ({
 };
 
 export default function LeetCodeDifficultyChart() {
-  const { user } = useAuth();
   const [data, setData] = useState<DifficultyData[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [notConnected, setNotConnected] = useState(false);
 
   const fetchData = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      setNotConnected(true);
-      return;
-    }
     try {
       const supabase = createClient();
       const { data: conn } = await supabase
         .from('platform_connections')
         .select('username')
-        .eq('user_id', user.id)
         .eq('platform', 'leetcode')
         .single();
 
@@ -79,7 +71,7 @@ export default function LeetCodeDifficultyChart() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     fetchData();
