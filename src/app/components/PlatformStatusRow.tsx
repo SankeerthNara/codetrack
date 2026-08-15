@@ -40,20 +40,42 @@ export default function PlatformStatusRow() {
       const supabase = createClient();
       const { data } = await supabase
         .from('platform_connections')
-        .select('platform, username, last_synced_at');
+        .select('platform, username, last_synced_at, last_sync_status');
 
-      const connMap: Record<string, { username: string; last_synced_at: string | null }> = {};
-      (data ?? []).forEach((row: { platform: string; username: string; last_synced_at: string | null }) => {
-        connMap[row.platform] = { username: row.username, last_synced_at: row.last_synced_at };
-      });
+      const connMap: Record<
+        string,
+        { username: string; last_synced_at: string | null; last_sync_status: string | null }
+      > = {};
+      (data ?? []).forEach(
+        (row: {
+          platform: string;
+          username: string;
+          last_synced_at: string | null;
+          last_sync_status: string | null;
+        }) => {
+          connMap[row.platform] = {
+            username: row.username,
+            last_synced_at: row.last_synced_at,
+            last_sync_status: row.last_sync_status,
+          };
+        }
+      );
 
       const statuses: PlatformStatus[] = PLATFORM_CONFIG.map((p) => {
         const conn = connMap[p.key];
+        // A saved username only means "connected" — it doesn't mean the last
+        // sync actually succeeded. Show an error state when it didn't, so
+        // this badge doesn't say "Live" while the stat cards below are blank.
+        const status: PlatformStatus['status'] = !conn
+          ? 'not_connected'
+          : conn.last_sync_status === 'error'
+            ? 'error'
+            : 'connected';
         return {
           id: `platform-${p.key}`,
           name: p.name,
           username: conn?.username ?? '',
-          status: conn ? 'connected' : 'not_connected',
+          status,
           lastSync: conn ? timeAgo(conn.last_synced_at) : 'Not connected',
           dot: p.dot,
         };

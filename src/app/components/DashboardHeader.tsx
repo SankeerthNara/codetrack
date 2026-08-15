@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { RefreshCw, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/localStorage/client';
+import { recordSyncResult } from '@/lib/localApi/syncStatus';
 
 interface StoredConnection {
   platform: 'leetcode' | 'github' | 'codeforces';
@@ -36,16 +37,18 @@ export default function DashboardHeader() {
       };
 
       const results = await Promise.allSettled(
-        connected.map((conn) => fetch(`${endpoint[conn.platform]}${encodeURIComponent(conn.username)}`))
+        connected.map(async (conn) => {
+          const res = await fetch(`${endpoint[conn.platform]}${encodeURIComponent(conn.username)}`);
+          const body = await res.json().catch(() => null);
+          if (res.ok) {
+            await recordSyncResult(conn.platform, { ok: true });
+            return true;
+          }
+          await recordSyncResult(conn.platform, { ok: false, error: body?.error || 'Sync failed' });
+          return false;
+        })
       );
-      const failures = results.filter((r) => r.status === 'rejected' || !r.value.ok).length;
-
-      const now = new Date().toISOString();
-      await Promise.all(
-        connected.map((conn) =>
-          supabase.from('platform_connections').update({ last_synced_at: now }).eq('platform', conn.platform)
-        )
-      );
+      const failures = results.filter((r) => r.status === 'rejected' || r.value === false).length;
 
       if (failures === connected.length) {
         toast.error('Sync failed — please try again');

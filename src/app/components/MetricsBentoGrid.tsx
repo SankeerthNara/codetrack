@@ -13,6 +13,7 @@ import {
   Minus,
 } from 'lucide-react';
 import { createClient } from '@/lib/localStorage/client';
+import { recordSyncResult } from '@/lib/localApi/syncStatus';
 import Icon from '@/components/ui/AppIcon';
 
 interface MetricCardProps {
@@ -139,8 +140,11 @@ interface CodeforcesStats {
 export default function MetricsBentoGrid() {
   const [lcStats, setLcStats] = useState<LeetCodeStats | null>(null);
   const [lcLoading, setLcLoading] = useState(true);
+  const [lcError, setLcError] = useState<string | null>(null);
   const [ghStats, setGhStats] = useState<GitHubStats | null>(null);
+  const [ghError, setGhError] = useState<string | null>(null);
   const [cfStats, setCfStats] = useState<CodeforcesStats | null>(null);
+  const [cfError, setCfError] = useState<string | null>(null);
 
   const fetchLeetCodeStats = useCallback(async () => {
     try {
@@ -157,12 +161,18 @@ export default function MetricsBentoGrid() {
       }
 
       const res = await fetch(`/api/leetcode?username=${encodeURIComponent(conn.username)}`);
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
         setLcStats(data);
+        setLcError(null);
+        recordSyncResult('leetcode', { ok: true });
+      } else {
+        setLcError(data?.error || 'Sync failed');
+        recordSyncResult('leetcode', { ok: false, error: data?.error || 'Sync failed' });
       }
     } catch {
-      // silently fail — show placeholders
+      setLcError('Sync failed');
+      recordSyncResult('leetcode', { ok: false, error: 'Sync failed' });
     } finally {
       setLcLoading(false);
     }
@@ -180,17 +190,23 @@ export default function MetricsBentoGrid() {
       if (!conn?.username) return;
 
       const res = await fetch(`/api/github?username=${encodeURIComponent(conn.username)}`);
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
         setGhStats({
           publicRepos: data.publicRepos ?? 0,
           totalStars: data.totalStars ?? 0,
           recentPRsMerged: data.recentPRsMerged ?? 0,
           followers: data.followers ?? 0,
         });
+        setGhError(null);
+        recordSyncResult('github', { ok: true });
+      } else {
+        setGhError(data?.error || 'Sync failed');
+        recordSyncResult('github', { ok: false, error: data?.error || 'Sync failed' });
       }
     } catch {
-      // silently fail
+      setGhError('Sync failed');
+      recordSyncResult('github', { ok: false, error: 'Sync failed' });
     }
   }, []);
 
@@ -206,17 +222,23 @@ export default function MetricsBentoGrid() {
       if (!conn?.username) return;
 
       const res = await fetch(`/api/codeforces?handle=${encodeURIComponent(conn.username)}`);
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
         setCfStats({
           rating: data.rating ?? null,
           maxRating: data.maxRating ?? null,
           rank: data.rank ?? null,
           problemsSolved: data.problemsSolved ?? 0,
         });
+        setCfError(null);
+        recordSyncResult('codeforces', { ok: true });
+      } else {
+        setCfError(data?.error || 'Sync failed');
+        recordSyncResult('codeforces', { ok: false, error: data?.error || 'Sync failed' });
       }
     } catch {
-      // silently fail
+      setCfError('Sync failed');
+      recordSyncResult('codeforces', { ok: false, error: 'Sync failed' });
     }
   }, []);
 
@@ -289,7 +311,9 @@ export default function MetricsBentoGrid() {
         subvalue={
           lcStats
             ? `Easy ${easySolved} · Medium ${mediumSolved} · Hard ${hardSolved}`
-            : 'Connect LeetCode to see stats'
+            : lcError
+              ? 'Sync failed — tap Sync Now to retry'
+              : 'Connect LeetCode to see stats'
         }
         trend={lcStats ? { direction: 'up', label: `${hardSolved} hard solved` } : undefined}
         icon={Code2}
@@ -341,7 +365,9 @@ export default function MetricsBentoGrid() {
         subvalue={
           cfStats
             ? `${cfStats.rank ? cfStats.rank : 'Unrated'}${cfStats.maxRating != null ? ` · Max ${cfStats.maxRating}` : ''}${cfStats.problemsSolved != null && cfStats.problemsSolved > 0 ? ` · ${cfStats.problemsSolved} solved` : ''}`
-            : 'Connect Codeforces to see rating'
+            : cfError
+              ? 'Sync failed — tap Sync Now to retry'
+              : 'Connect Codeforces to see rating'
         }
         trend={
           cfStats?.rating != null ? { direction: 'neutral', label: cfStats.rank ?? '' } : undefined
@@ -359,7 +385,9 @@ export default function MetricsBentoGrid() {
         subvalue={
           ghStats
             ? `${ghStats.publicRepos} repos · ${ghStats.totalStars} stars`
-            : 'Connect GitHub to see stats'
+            : ghError
+              ? 'Sync failed — tap Sync Now to retry'
+              : 'Connect GitHub to see stats'
         }
         trend={
           ghStats && ghStats.recentPRsMerged > 0
@@ -376,7 +404,13 @@ export default function MetricsBentoGrid() {
         id="metric-lc-streak"
         title="LeetCode Streak"
         value={lcStats ? String(streak) : '—'}
-        subvalue={lcStats ? 'days consecutive' : 'Connect LeetCode to see streak'}
+        subvalue={
+          lcStats
+            ? 'days consecutive'
+            : lcError
+              ? 'Sync failed — tap Sync Now to retry'
+              : 'Connect LeetCode to see streak'
+        }
         trend={lcStats && streak > 0 ? { direction: 'up', label: 'Keep it up!' } : undefined}
         icon={Flame}
         iconColor="bg-warning/15 text-warning"
@@ -395,7 +429,13 @@ export default function MetricsBentoGrid() {
         id="metric-active-days"
         title="Total Active Days"
         value={lcStats ? String(activeDays) : '—'}
-        subvalue={lcStats ? 'active days on LeetCode' : 'Connect LeetCode to see activity'}
+        subvalue={
+          lcStats
+            ? 'active days on LeetCode'
+            : lcError
+              ? 'Sync failed — tap Sync Now to retry'
+              : 'Connect LeetCode to see activity'
+        }
         trend={lcStats && activeDays > 0 ? { direction: 'up', label: 'This year' } : undefined}
         icon={CalendarDays}
         iconColor="bg-info/15 text-info"

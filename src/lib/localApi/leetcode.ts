@@ -113,7 +113,11 @@ export async function fetchLeetCodeStats(username: string): Promise<LeetCodeApiR
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Accept: '*/*',
+      Origin: 'https://leetcode.com',
       Referer: 'https://leetcode.com',
+      'User-Agent':
+        'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36',
     },
     body: JSON.stringify({
       operationName: 'combinedStats',
@@ -123,7 +127,17 @@ export async function fetchLeetCodeStats(username: string): Promise<LeetCodeApiR
   });
 
   if (!response.ok) {
+    if (response.status === 403) {
+      throw new Error('LeetCode blocked the request (rate-limited or bot-protected) — try syncing again shortly');
+    }
     throw new Error(`LeetCode API error: ${response.status}`);
+  }
+
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) {
+    // Cloudflare's challenge/error pages come back as HTML with a 200,
+    // which would otherwise silently fail JSON parsing below.
+    throw new Error('LeetCode returned an unexpected response — try syncing again shortly');
   }
 
   const json = await response.json();
