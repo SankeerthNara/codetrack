@@ -6,12 +6,10 @@ import AppLogo from '@/components/ui/AppLogo';
 import {
   LayoutDashboard,
   Link2,
-  Settings,
   ChevronLeft,
   ChevronRight,
-  User,
   Bell,
-  Trophy,
+  Users,
   Sun,
   Moon,
 } from 'lucide-react';
@@ -29,10 +27,8 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard, group: 'main' },
   { label: 'Platform Connections', href: '/platform-connections', icon: Link2, group: 'main' },
-  { label: 'Leaderboard', href: '/leaderboard', icon: Trophy, group: 'main' },
+  { label: 'Compare', href: '/compare', icon: Users, group: 'main' },
   { label: 'Notifications', href: '/notifications', icon: Bell, group: 'account' },
-  { label: 'Profile', href: '/profile', icon: User, group: 'account' },
-  { label: 'Settings', href: '/settings', icon: Settings, group: 'account' },
 ];
 
 interface SidebarProps {

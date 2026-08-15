@@ -140,17 +140,17 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
     return (
       <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-leetcode/40 transition-all duration-200 flex flex-col">
         <div className="px-5 pt-5 pb-4 border-b border-border">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-leetcode/15 flex items-center justify-center">
+          <div className="flex items-start justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-11 h-11 rounded-xl bg-leetcode/15 flex items-center justify-center flex-shrink-0">
                 <Code2 size={22} className="text-leetcode" />
               </div>
-              <div>
-                <h3 className="text-base font-semibold text-foreground">LeetCode</h3>
-                <p className="text-xs text-muted-foreground">Algorithm practice platform</p>
+              <div className="min-w-0">
+                <h3 className="text-base font-semibold text-foreground truncate">LeetCode</h3>
+                <p className="text-xs text-muted-foreground truncate">Algorithm practice platform</p>
               </div>
             </div>
-            <Badge variant="muted" dot>
+            <Badge variant="muted" dot className="flex-shrink-0">
               Not Connected
             </Badge>
           </div>
@@ -175,22 +175,22 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
     <div className="bg-card border border-border rounded-xl overflow-hidden hover:border-leetcode/40 transition-all duration-200 card-glow-emerald flex flex-col">
       {/* Header */}
       <div className="px-5 pt-5 pb-4 border-b border-border">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-leetcode/15 flex items-center justify-center">
+        <div className="flex items-start justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 rounded-xl bg-leetcode/15 flex items-center justify-center flex-shrink-0">
               <Code2 size={22} className="text-leetcode" />
             </div>
-            <div>
-              <h3 className="text-base font-semibold text-foreground">LeetCode</h3>
-              <p className="text-xs text-muted-foreground">Algorithm practice platform</p>
+            <div className="min-w-0">
+              <h3 className="text-base font-semibold text-foreground truncate">LeetCode</h3>
+              <p className="text-xs text-muted-foreground truncate">Algorithm practice platform</p>
             </div>
           </div>
-          <Badge variant="success" dot>
+          <Badge variant="success" dot className="flex-shrink-0">
             Connected
           </Badge>
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3 flex items-center gap-2 flex-wrap">
           <span className="text-xs text-muted-foreground">Logged in as</span>
           <span className="text-xs font-semibold font-mono text-foreground bg-secondary px-2 py-0.5 rounded-md">
             @{connection.username}

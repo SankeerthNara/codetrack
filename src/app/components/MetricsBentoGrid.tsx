@@ -364,7 +364,7 @@ export default function MetricsBentoGrid() {
         value={cfStats?.rating != null ? String(cfStats.rating) : '—'}
         subvalue={
           cfStats
-            ? `${cfStats.rank ? cfStats.rank : 'Unrated'}${cfStats.maxRating != null ? ` · Max ${cfStats.maxRating}` : ''}${cfStats.problemsSolved != null && cfStats.problemsSolved > 0 ? ` · ${cfStats.problemsSolved} solved` : ''}`
+            ? `${cfStats.rank ? cfStats.rank : 'Unrated'}${cfStats.maxRating != null ? ` · Max ${cfStats.maxRating}` : ''}`
             : cfError
               ? 'Sync failed — tap Sync Now to retry'
               : 'Connect Codeforces to see rating'
@@ -375,7 +375,16 @@ export default function MetricsBentoGrid() {
         icon={Zap}
         iconColor="bg-codeforces/15 text-codeforces"
         bgAccent="#1890ff"
-      />
+      >
+        {cfStats && (
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Problems Solved</span>
+            <span className="font-mono text-foreground font-semibold">
+              {cfStats.problemsSolved}
+            </span>
+          </div>
+        )}
+      </MetricCard>
 
       {/* GitHub PRs Merged — real data when connected */}
       <MetricCard
