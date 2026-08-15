@@ -1,0 +1,13 @@
+{
+	"appId": "com.codetrack.app",
+	"appName": "CodeTrack",
+	"webDir": "out",
+	"server": {
+		"androidScheme": "https"
+	},
+	"plugins": {
+		"CapacitorHttp": {
+			"enabled": true
+		}
+	}
+}
