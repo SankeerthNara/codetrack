@@ -3,7 +3,16 @@
  * GitHub's REST API already allows cross-origin browser requests for these
  * public read endpoints, so this works even without the CapacitorHttp
  * bridge (unlike leetcode.ts).
+ *
+ * Unauthenticated requests are capped at 60/hour per IP, shared across
+ * everything on that network — a single sync burns 3 of those (profile,
+ * repos, events; the search endpoint has its own separate quota), so that
+ * ceiling is easy to hit. If the user has already set up a GitHub token for
+ * the Notifications tab (see githubToken.ts), reuse it here too — it bumps
+ * the limit to 5,000/hour and costs them nothing extra to set up.
  */
+
+import { getGitHubToken } from './githubToken';
 
 export interface GitHubApiResult {
   username: string;
@@ -20,8 +29,10 @@ export interface GitHubApiResult {
 }
 
 export async function fetchGitHubStats(username: string): Promise<GitHubApiResult> {
+  const token = getGitHubToken();
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github.v3+json',
+    ...(token ? { Authorization: `token ${token}` } : {}),
   };
 
   const [userRes, reposRes, mergedPRsRes] = await Promise.all([
@@ -39,6 +50,16 @@ export async function fetchGitHubStats(username: string): Promise<GitHubApiResul
   if (!userRes.ok) {
     if (userRes.status === 404) {
       throw new Error('GitHub user not found');
+    }
+    if (userRes.status === 401) {
+      throw new Error('GitHub token is invalid — update it in Notifications, or remove it to sync without auth');
+    }
+    if (userRes.status === 403) {
+      throw new Error(
+        token
+          ? 'GitHub rate limit hit — try syncing again shortly'
+          : 'GitHub rate limit hit — set up a token in Notifications to raise the limit'
+      );
     }
     throw new Error(`GitHub API error: ${userRes.status}`);
   }

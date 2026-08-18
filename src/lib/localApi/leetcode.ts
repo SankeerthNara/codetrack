@@ -2,16 +2,22 @@
  * Ported from the old src/app/api/leetcode/route.ts server route.
  *
  * The Android build has no server, so this runs entirely in the WebView.
- * LeetCode's GraphQL endpoint blocks cross-origin browser requests, which is
- * exactly why this used to live behind a Next.js API route. On the actual
- * Android app this is a non-issue: capacitor.config.ts enables the
- * CapacitorHttp bridge, which transparently routes `fetch()` through native
- * code instead of the WebView's networking stack, sidestepping CORS
- * entirely. Running this in a plain desktop browser (e.g. `next dev`) will
- * still hit LeetCode's CORS restriction — that's expected outside the app.
+ * LeetCode's GraphQL endpoint blocks requests it doesn't think came from a
+ * real browser (Cloudflare bot protection) — a native HTTP client can still
+ * get flagged even with browser-like headers, since it lacks a real
+ * Chromium TLS/JS fingerprint. Two mitigations:
+ *
+ * 1. If the user configures a proxy URL (see proxyConfig.ts / the
+ *    /cloudflare-worker folder), requests route through that instead of
+ *    hitting leetcode.com directly — a real server's traffic doesn't get
+ *    flagged the way on-device requests do, so this is the reliable fix.
+ * 2. Without a proxy configured, this falls back to a direct call via
+ *    CapacitorHttp (capacitor.config.ts enables it, bypassing CORS on
+ *    native Android) — works most of the time, just not guaranteed.
  */
 
-const LEETCODE_GRAPHQL = 'https://leetcode.com/graphql/';
+import { leetcodeGraphQL } from './leetcodeClient';
+
 const SECONDS_PER_DAY = 86400;
 
 const COMBINED_QUERY = `
@@ -109,41 +115,7 @@ export interface LeetCodeApiResult {
 }
 
 export async function fetchLeetCodeStats(username: string): Promise<LeetCodeApiResult> {
-  const response = await fetch(LEETCODE_GRAPHQL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: '*/*',
-      Origin: 'https://leetcode.com',
-      Referer: 'https://leetcode.com',
-      'User-Agent':
-        'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36',
-    },
-    body: JSON.stringify({
-      operationName: 'combinedStats',
-      query: COMBINED_QUERY,
-      variables: { username, limit: 10 },
-    }),
-  });
-
-  if (!response.ok) {
-    if (response.status === 403) {
-      throw new Error('LeetCode blocked the request (rate-limited or bot-protected) — try syncing again shortly');
-    }
-    throw new Error(`LeetCode API error: ${response.status}`);
-  }
-
-  const contentType = response.headers.get('content-type') ?? '';
-  if (!contentType.includes('application/json')) {
-    // Cloudflare's challenge/error pages come back as HTML with a 200,
-    // which would otherwise silently fail JSON parsing below.
-    throw new Error('LeetCode returned an unexpected response — try syncing again shortly');
-  }
-
-  const json = await response.json();
-  if (json.errors) {
-    throw new Error(json.errors[0]?.message || 'GraphQL error');
-  }
+  const json = await leetcodeGraphQL('combinedStats', COMBINED_QUERY, { username, limit: 10 });
 
   const matchedUser = json.data?.matchedUser;
   if (!matchedUser) {

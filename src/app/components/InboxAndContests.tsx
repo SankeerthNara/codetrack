@@ -16,6 +16,8 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { createClient } from '@/lib/localStorage/client';
+import { fetchAllContests, type Contest } from '@/lib/localApi/contests';
+import { getCachedStats, setCachedStats } from '@/lib/localApi/statsCache';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,72 +31,6 @@ interface GitHubNotification {
   unread: boolean;
   url: string;
 }
-
-interface Contest {
-  id: string;
-  platform: 'leetcode' | 'codeforces';
-  name: string;
-  startTime: string;
-  duration: string;
-  status: 'upcoming' | 'ongoing' | 'ended';
-  url: string;
-  participants?: number;
-}
-
-// ─── Static contest data (public schedule — not user-specific) ────────────────
-
-const staticContests: Contest[] = [
-  {
-    id: 'lc-weekly-400',
-    platform: 'leetcode',
-    name: 'Weekly Contest 400',
-    startTime: 'Sun, Aug 4 · 8:00 AM IST',
-    duration: '1h 30m',
-    status: 'upcoming',
-    url: 'https://leetcode.com/contest/',
-    participants: 24000,
-  },
-  {
-    id: 'lc-biweekly-135',
-    platform: 'leetcode',
-    name: 'Biweekly Contest 135',
-    startTime: 'Sat, Aug 10 · 8:00 PM IST',
-    duration: '1h 30m',
-    status: 'upcoming',
-    url: 'https://leetcode.com/contest/',
-    participants: 18500,
-  },
-  {
-    id: 'cf-round-960',
-    platform: 'codeforces',
-    name: 'Codeforces Round 960 (Div. 2)',
-    startTime: 'Mon, Aug 5 · 8:35 PM IST',
-    duration: '2h 15m',
-    status: 'upcoming',
-    url: 'https://codeforces.com/contests',
-    participants: 15000,
-  },
-  {
-    id: 'cf-edu-168',
-    platform: 'codeforces',
-    name: 'Educational Codeforces Round 168',
-    startTime: 'Wed, Aug 7 · 8:35 PM IST',
-    duration: '2h',
-    status: 'upcoming',
-    url: 'https://codeforces.com/contests',
-    participants: 12000,
-  },
-  {
-    id: 'cf-round-959',
-    platform: 'codeforces',
-    name: 'Codeforces Round 959 (Div. 1)',
-    startTime: 'Sat, Aug 3 · 8:35 PM IST',
-    duration: '2h 30m',
-    status: 'ended',
-    url: 'https://codeforces.com/contests',
-    participants: 8200,
-  },
-];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -192,6 +128,24 @@ function timeAgo(dateStr: string): string {
   const days = Math.floor(hrs / 24);
   if (days === 1) return 'Yesterday';
   return `${days} days ago`;
+}
+
+function formatContestStart(startTimeMs: number): string {
+  return new Date(startTimeMs).toLocaleString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function formatDuration(minutes: number): string {
+  const hrs = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hrs === 0) return `${mins}m`;
+  if (mins === 0) return `${hrs}h`;
+  return `${hrs}h ${mins}m`;
 }
 
 function GitHubInboxPanel({ ghUsername, ghLoading, recentCommits }: GitHubInboxPanelProps) {
@@ -311,6 +265,44 @@ export default function InboxAndContests() {
     Array<{ id: string; repo: string; message: string; createdAt: string }>
   >([]);
 
+  const [contests, setContests] = useState<Contest[]>([]);
+  const [contestsLoading, setContestsLoading] = useState(true);
+  const [contestsError, setContestsError] = useState<string | null>(null);
+  const [contestsStale, setContestsStale] = useState(false);
+
+  const fetchContests = useCallback(async () => {
+    setContestsLoading(true);
+    try {
+      const { contests: fresh, errors } = await fetchAllContests();
+      if (fresh.length > 0) {
+        setContests(fresh);
+        setContestsStale(false);
+        setContestsError(null);
+        setCachedStats('contests', 'schedule', fresh);
+      } else {
+        // Both sources failed (or returned nothing) — fall back to cache.
+        const cached = getCachedStats<Contest[]>('contests', 'schedule');
+        if (cached) {
+          setContests(cached.data);
+          setContestsStale(true);
+          setContestsError(null);
+        } else {
+          setContestsError(errors.leetcode || errors.codeforces || 'Could not load contests');
+        }
+      }
+    } catch {
+      const cached = getCachedStats<Contest[]>('contests', 'schedule');
+      if (cached) {
+        setContests(cached.data);
+        setContestsStale(true);
+      } else {
+        setContestsError('Could not load contests');
+      }
+    } finally {
+      setContestsLoading(false);
+    }
+  }, []);
+
   const fetchGitHubData = useCallback(async () => {
     try {
       const supabase = createClient();
@@ -340,12 +332,13 @@ export default function InboxAndContests() {
 
   useEffect(() => {
     fetchGitHubData();
-  }, [fetchGitHubData]);
+    fetchContests();
+  }, [fetchGitHubData, fetchContests]);
 
   const filteredContests =
     contestFilter === 'all'
-      ? staticContests
-      : staticContests.filter((c) => c.platform === contestFilter);
+      ? contests
+      : contests.filter((c) => c.platform === contestFilter);
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -395,61 +388,86 @@ export default function InboxAndContests() {
           ))}
         </div>
 
-        <ul className="divide-y divide-border">
-          {filteredContests.map((contest) => (
-            <li key={contest.id}>
-              <a
-                href={contest.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-start gap-3 px-5 py-3.5 hover:bg-secondary/40 transition-colors group"
-              >
-                <div
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    contest.platform === 'leetcode' ? 'bg-leetcode/10' : 'bg-codeforces/10'
-                  }`}
-                >
-                  {contest.platform === 'leetcode' ? (
-                    <Code2 size={14} className="text-leetcode" />
-                  ) : (
-                    <Zap size={14} className="text-codeforces" />
-                  )}
+        {contestsLoading ? (
+          <div className="animate-pulse">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex items-start gap-3 px-5 py-3.5 border-b border-border">
+                <div className="w-7 h-7 rounded-lg bg-secondary flex-shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3.5 bg-secondary rounded w-2/3" />
+                  <div className="h-3 bg-secondary rounded w-1/2" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium text-foreground leading-snug truncate">
-                      {contest.name}
-                    </p>
-                    <ContestStatusBadge status={contest.status} />
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
-                    <span className="text-2xs text-muted-foreground flex items-center gap-1">
-                      <Calendar size={10} />
-                      {contest.startTime}
-                    </span>
-                    <span className="text-2xs text-muted-foreground">·</span>
-                    <span className="text-2xs text-muted-foreground flex items-center gap-1">
-                      <Clock size={10} />
-                      {contest.duration}
-                    </span>
-                    {contest.participants && (
-                      <>
-                        <span className="text-2xs text-muted-foreground">·</span>
-                        <span className="text-2xs text-muted-foreground">
-                          ~{(contest.participants / 1000).toFixed(0)}k participants
+              </div>
+            ))}
+          </div>
+        ) : contestsError ? (
+          <div className="px-5 py-10 text-center">
+            <p className="text-sm text-danger mb-2">{contestsError}</p>
+            <button onClick={fetchContests} className="text-xs text-primary hover:underline">
+              Try again
+            </button>
+          </div>
+        ) : filteredContests.length === 0 ? (
+          <div className="px-5 py-10 text-center">
+            <p className="text-sm text-muted-foreground">No contests found</p>
+          </div>
+        ) : (
+          <>
+            {contestsStale && (
+              <div className="flex items-center gap-1.5 bg-warning/8 border-b border-warning/20 px-5 py-2">
+                <AlertCircle size={11} className="text-warning flex-shrink-0" />
+                <p className="text-2xs text-warning">Showing last loaded schedule</p>
+              </div>
+            )}
+            <ul className="divide-y divide-border">
+              {filteredContests.map((contest) => (
+                <li key={contest.id}>
+                  <a
+                    href={contest.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-start gap-3 px-5 py-3.5 hover:bg-secondary/40 transition-colors group"
+                  >
+                    <div
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        contest.platform === 'leetcode' ? 'bg-leetcode/10' : 'bg-codeforces/10'
+                      }`}
+                    >
+                      {contest.platform === 'leetcode' ? (
+                        <Code2 size={14} className="text-leetcode" />
+                      ) : (
+                        <Zap size={14} className="text-codeforces" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-sm font-medium text-foreground leading-snug truncate">
+                          {contest.name}
+                        </p>
+                        <ContestStatusBadge status={contest.status} />
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
+                        <span className="text-2xs text-muted-foreground flex items-center gap-1">
+                          <Calendar size={10} />
+                          {formatContestStart(contest.startTime)}
                         </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <ChevronRight
-                  size={14}
-                  className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1"
-                />
-              </a>
-            </li>
-          ))}
-        </ul>
+                        <span className="text-2xs text-muted-foreground">·</span>
+                        <span className="text-2xs text-muted-foreground flex items-center gap-1">
+                          <Clock size={10} />
+                          {formatDuration(contest.durationMinutes)}
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronRight
+                      size={14}
+                      className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1"
+                    />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
 
         <div className="px-5 py-3 border-t border-border flex items-center justify-between">
           <a

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/localStorage/client';
 import { recordSyncResult } from '@/lib/localApi/syncStatus';
+import { getCachedStats, setCachedStats } from '@/lib/localApi/statsCache';
 import Icon from '@/components/ui/AppIcon';
 
 interface MetricCardProps {
@@ -141,10 +142,13 @@ export default function MetricsBentoGrid() {
   const [lcStats, setLcStats] = useState<LeetCodeStats | null>(null);
   const [lcLoading, setLcLoading] = useState(true);
   const [lcError, setLcError] = useState<string | null>(null);
+  const [lcStale, setLcStale] = useState(false);
   const [ghStats, setGhStats] = useState<GitHubStats | null>(null);
   const [ghError, setGhError] = useState<string | null>(null);
+  const [ghStale, setGhStale] = useState(false);
   const [cfStats, setCfStats] = useState<CodeforcesStats | null>(null);
   const [cfError, setCfError] = useState<string | null>(null);
+  const [cfStale, setCfStale] = useState(false);
 
   const fetchLeetCodeStats = useCallback(async () => {
     try {
@@ -165,10 +169,23 @@ export default function MetricsBentoGrid() {
       if (res.ok) {
         setLcStats(data);
         setLcError(null);
+        setLcStale(false);
+        setCachedStats('leetcode', conn.username, data);
         recordSyncResult('leetcode', { ok: true });
       } else {
-        setLcError(data?.error || 'Sync failed');
-        recordSyncResult('leetcode', { ok: false, error: data?.error || 'Sync failed' });
+        const cached = getCachedStats<LeetCodeStats>('leetcode', conn.username);
+        if (cached) {
+          // Sync failed, but we have real data from before — show that
+          // instead of an error. Sync status is left as-is rather than
+          // being marked an error, so this stays invisible unless it
+          // happens repeatedly (the "as of" timestamp will just get older).
+          setLcStats(cached.data);
+          setLcStale(true);
+          setLcError(null);
+        } else {
+          setLcError(data?.error || 'Sync failed');
+          recordSyncResult('leetcode', { ok: false, error: data?.error || 'Sync failed' });
+        }
       }
     } catch {
       setLcError('Sync failed');
@@ -192,17 +209,27 @@ export default function MetricsBentoGrid() {
       const res = await fetch(`/api/github?username=${encodeURIComponent(conn.username)}`);
       const data = await res.json();
       if (res.ok) {
-        setGhStats({
+        const shaped: GitHubStats = {
           publicRepos: data.publicRepos ?? 0,
           totalStars: data.totalStars ?? 0,
           recentPRsMerged: data.recentPRsMerged ?? 0,
           followers: data.followers ?? 0,
-        });
+        };
+        setGhStats(shaped);
         setGhError(null);
+        setGhStale(false);
+        setCachedStats('github', conn.username, shaped);
         recordSyncResult('github', { ok: true });
       } else {
-        setGhError(data?.error || 'Sync failed');
-        recordSyncResult('github', { ok: false, error: data?.error || 'Sync failed' });
+        const cached = getCachedStats<GitHubStats>('github', conn.username);
+        if (cached) {
+          setGhStats(cached.data);
+          setGhStale(true);
+          setGhError(null);
+        } else {
+          setGhError(data?.error || 'Sync failed');
+          recordSyncResult('github', { ok: false, error: data?.error || 'Sync failed' });
+        }
       }
     } catch {
       setGhError('Sync failed');
@@ -224,17 +251,27 @@ export default function MetricsBentoGrid() {
       const res = await fetch(`/api/codeforces?handle=${encodeURIComponent(conn.username)}`);
       const data = await res.json();
       if (res.ok) {
-        setCfStats({
+        const shaped: CodeforcesStats = {
           rating: data.rating ?? null,
           maxRating: data.maxRating ?? null,
           rank: data.rank ?? null,
           problemsSolved: data.problemsSolved ?? 0,
-        });
+        };
+        setCfStats(shaped);
         setCfError(null);
+        setCfStale(false);
+        setCachedStats('codeforces', conn.username, shaped);
         recordSyncResult('codeforces', { ok: true });
       } else {
-        setCfError(data?.error || 'Sync failed');
-        recordSyncResult('codeforces', { ok: false, error: data?.error || 'Sync failed' });
+        const cached = getCachedStats<CodeforcesStats>('codeforces', conn.username);
+        if (cached) {
+          setCfStats(cached.data);
+          setCfStale(true);
+          setCfError(null);
+        } else {
+          setCfError(data?.error || 'Sync failed');
+          recordSyncResult('codeforces', { ok: false, error: data?.error || 'Sync failed' });
+        }
       }
     } catch {
       setCfError('Sync failed');
@@ -310,7 +347,7 @@ export default function MetricsBentoGrid() {
         value={lcStats ? String(totalSolved) : '—'}
         subvalue={
           lcStats
-            ? `Easy ${easySolved} · Medium ${mediumSolved} · Hard ${hardSolved}`
+            ? `Easy ${easySolved} · Medium ${mediumSolved} · Hard ${hardSolved}${lcStale ? ' (cached)' : ''}`
             : lcError
               ? 'Sync failed — tap Sync Now to retry'
               : 'Connect LeetCode to see stats'
@@ -364,7 +401,7 @@ export default function MetricsBentoGrid() {
         value={cfStats?.rating != null ? String(cfStats.rating) : '—'}
         subvalue={
           cfStats
-            ? `${cfStats.rank ? cfStats.rank : 'Unrated'}${cfStats.maxRating != null ? ` · Max ${cfStats.maxRating}` : ''}`
+            ? `${cfStats.rank ? cfStats.rank : 'Unrated'}${cfStats.maxRating != null ? ` · Max ${cfStats.maxRating}` : ''}${cfStale ? ' (cached)' : ''}`
             : cfError
               ? 'Sync failed — tap Sync Now to retry'
               : 'Connect Codeforces to see rating'
@@ -393,7 +430,7 @@ export default function MetricsBentoGrid() {
         value={ghStats ? String(ghStats.recentPRsMerged) : '—'}
         subvalue={
           ghStats
-            ? `${ghStats.publicRepos} repos · ${ghStats.totalStars} stars`
+            ? `${ghStats.publicRepos} repos · ${ghStats.totalStars} stars${ghStale ? ' (cached)' : ''}`
             : ghError
               ? 'Sync failed — tap Sync Now to retry'
               : 'Connect GitHub to see stats'
@@ -415,7 +452,7 @@ export default function MetricsBentoGrid() {
         value={lcStats ? String(streak) : '—'}
         subvalue={
           lcStats
-            ? 'days consecutive'
+            ? `days consecutive${lcStale ? ' (cached)' : ''}`
             : lcError
               ? 'Sync failed — tap Sync Now to retry'
               : 'Connect LeetCode to see streak'
@@ -440,7 +477,7 @@ export default function MetricsBentoGrid() {
         value={lcStats ? String(activeDays) : '—'}
         subvalue={
           lcStats
-            ? 'active days on LeetCode'
+            ? `active days on LeetCode${lcStale ? ' (cached)' : ''}`
             : lcError
               ? 'Sync failed — tap Sync Now to retry'
               : 'Connect LeetCode to see activity'

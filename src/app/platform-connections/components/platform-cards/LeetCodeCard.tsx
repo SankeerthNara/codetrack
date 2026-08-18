@@ -16,6 +16,7 @@ import {
 import Badge from '@/components/ui/Badge';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/localStorage/client';
+import { getCachedStats, setCachedStats } from '@/lib/localApi/statsCache';
 import type { PlatformConnection } from '../PlatformCardList';
 
 interface LeetCodeCardProps {
@@ -71,6 +72,7 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
   const [stats, setStats] = useState<LeetCodeStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState<string | null>(null);
+  const [statsStale, setStatsStale] = useState(false);
 
   const fetchStats = useCallback(async (username: string) => {
     setStatsLoading(true);
@@ -79,12 +81,26 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
       const res = await fetch(`/api/leetcode?username=${encodeURIComponent(username)}`);
       const data = await res.json();
       if (!res.ok) {
-        setStatsError(data.error || 'Failed to load stats');
+        const cached = getCachedStats<LeetCodeStats>('leetcode', username);
+        if (cached) {
+          setStats(cached.data);
+          setStatsStale(true);
+        } else {
+          setStatsError(data.error || 'Failed to load stats');
+        }
       } else {
         setStats(data);
+        setStatsStale(false);
+        setCachedStats('leetcode', username, data);
       }
     } catch {
-      setStatsError('Network error — could not reach LeetCode');
+      const cached = getCachedStats<LeetCodeStats>('leetcode', username);
+      if (cached) {
+        setStats(cached.data);
+        setStatsStale(true);
+      } else {
+        setStatsError('Network error — could not reach LeetCode');
+      }
     } finally {
       setStatsLoading(false);
     }
@@ -233,6 +249,14 @@ export default function LeetCodeCard({ onConnect, connection, loading }: LeetCod
 
         {stats && !statsLoading && (
           <>
+            {statsStale && (
+              <div className="flex items-center gap-1.5 bg-warning/8 border border-warning/20 rounded-lg px-3 py-2">
+                <AlertCircle size={12} className="text-warning flex-shrink-0" />
+                <p className="text-2xs text-warning">
+                  Couldn't reach LeetCode — showing your last synced stats
+                </p>
+              </div>
+            )}
             {/* Problems solved by difficulty */}
             <div>
               <p className="text-2xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">

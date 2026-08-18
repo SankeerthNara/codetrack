@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import AppLayout from '@/components/AppLayout';
 import {
   Code2,
@@ -16,9 +17,13 @@ import {
   Trophy,
   Target,
   Activity,
+  ChevronDown,
+  AlertTriangle,
 } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { createClient } from '@/lib/localStorage/client';
+import { getCachedStats, setCachedStats } from '@/lib/localApi/statsCache';
+import { getLeetCodeProxyUrl, setLeetCodeProxyUrl, clearLeetCodeProxyUrl } from '@/lib/localApi/proxyConfig';
 import ConnectModal from './components/ConnectModal';
 import type { ConnectModalConfig, PlatformConnection } from './components/PlatformCardList';
 import { toast } from 'sonner';
@@ -155,19 +160,19 @@ function PlatformRow({
       className={`bg-card border rounded-xl overflow-hidden transition-all duration-200 ${connection ? `${accentBorder} hover:border-opacity-60` : 'border-border'}`}
     >
       {/* Header row */}
-      <div className="px-5 pt-5 pb-4 flex items-start justify-between gap-3">
+      <div className="px-5 pt-5 pb-4 flex items-start justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
           {icon}
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-foreground">{name}</h3>
-            <p className="text-xs text-muted-foreground">{description}</p>
+            <h3 className="text-sm font-semibold text-foreground truncate">{name}</h3>
+            <p className="text-xs text-muted-foreground truncate">{description}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
           {connection ? (
             <>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-mono text-muted-foreground">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-xs font-mono text-muted-foreground truncate max-w-[140px]">
                   @{connection.username}
                 </span>
                 {profileUrl && (
@@ -175,18 +180,18 @@ function PlatformRow({
                     href={profileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-muted-foreground hover:text-primary transition-colors"
+                    className="text-muted-foreground hover:text-primary transition-colors flex-shrink-0"
                   >
                     <ExternalLink size={11} />
                   </a>
                 )}
               </div>
-              <Badge variant="success" dot>
+              <Badge variant="success" dot className="flex-shrink-0">
                 Connected
               </Badge>
             </>
           ) : (
-            <Badge variant="muted" dot>
+            <Badge variant="muted" dot className="flex-shrink-0">
               Not Connected
             </Badge>
           )}
@@ -274,6 +279,11 @@ export default function PlatformConnectionsPage() {
   const [cfLoading, setCfLoading] = useState(false);
 
   const [syncingPlatform, setSyncingPlatform] = useState<string | null>(null);
+  const [lcStale, setLcStale] = useState(false);
+  const [ghStale, setGhStale] = useState(false);
+  const [cfStale, setCfStale] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [proxyUrlInput, setProxyUrlInput] = useState('');
 
   // ── Load connections ──────────────────────────────────────────────────────
   const loadConnections = useCallback(async () => {
@@ -289,16 +299,42 @@ export default function PlatformConnectionsPage() {
 
   useEffect(() => {
     loadConnections();
+    setProxyUrlInput(getLeetCodeProxyUrl() ?? '');
   }, [loadConnections]);
+
+  const handleSaveProxyUrl = () => {
+    if (proxyUrlInput.trim()) {
+      setLeetCodeProxyUrl(proxyUrlInput.trim());
+      toast.success('Proxy URL saved — future LeetCode syncs will use it');
+    } else {
+      clearLeetCodeProxyUrl();
+      toast.success('Proxy cleared — LeetCode syncs will call LeetCode directly');
+    }
+  };
 
   // ── Fetch stats when connections load ────────────────────────────────────
   const fetchLCStats = useCallback(async (username: string) => {
     setLcLoading(true);
     try {
       const res = await fetch(`/api/leetcode?username=${encodeURIComponent(username)}`);
-      if (res.ok) setLcStats(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        setLcStats(data);
+        setLcStale(false);
+        setCachedStats('leetcode', username, data);
+      } else {
+        const cached = getCachedStats<LeetCodeStats>('leetcode', username);
+        if (cached) {
+          setLcStats(cached.data);
+          setLcStale(true);
+        }
+      }
     } catch {
-      /* silent */
+      const cached = getCachedStats<LeetCodeStats>('leetcode', username);
+      if (cached) {
+        setLcStats(cached.data);
+        setLcStale(true);
+      }
     } finally {
       setLcLoading(false);
     }
@@ -310,15 +346,28 @@ export default function PlatformConnectionsPage() {
       const res = await fetch(`/api/github?username=${encodeURIComponent(username)}`);
       if (res.ok) {
         const d = await res.json();
-        setGhStats({
+        const shaped: GitHubStats = {
           publicRepos: d.publicRepos ?? 0,
           totalStars: d.totalStars ?? 0,
           recentPRsMerged: d.recentPRsMerged ?? 0,
           followers: d.followers ?? 0,
-        });
+        };
+        setGhStats(shaped);
+        setGhStale(false);
+        setCachedStats('github', username, shaped);
+      } else {
+        const cached = getCachedStats<GitHubStats>('github', username);
+        if (cached) {
+          setGhStats(cached.data);
+          setGhStale(true);
+        }
       }
     } catch {
-      /* silent */
+      const cached = getCachedStats<GitHubStats>('github', username);
+      if (cached) {
+        setGhStats(cached.data);
+        setGhStale(true);
+      }
     } finally {
       setGhLoading(false);
     }
@@ -330,15 +379,28 @@ export default function PlatformConnectionsPage() {
       const res = await fetch(`/api/codeforces?handle=${encodeURIComponent(handle)}`);
       if (res.ok) {
         const d = await res.json();
-        setCfStats({
+        const shaped: CodeforcesStats = {
           rating: d.rating ?? null,
           maxRating: d.maxRating ?? null,
           rank: d.rank ?? null,
           problemsSolved: d.problemsSolved ?? 0,
-        });
+        };
+        setCfStats(shaped);
+        setCfStale(false);
+        setCachedStats('codeforces', handle, shaped);
+      } else {
+        const cached = getCachedStats<CodeforcesStats>('codeforces', handle);
+        if (cached) {
+          setCfStats(cached.data);
+          setCfStale(true);
+        }
       }
     } catch {
-      /* silent */
+      const cached = getCachedStats<CodeforcesStats>('codeforces', handle);
+      if (cached) {
+        setCfStats(cached.data);
+        setCfStale(true);
+      }
     } finally {
       setCfLoading(false);
     }
@@ -526,6 +588,14 @@ export default function PlatformConnectionsPage() {
                   </div>
                 ) : lcStats ? (
                   <div className="space-y-3">
+                    {lcStale && (
+                      <div className="flex items-center gap-1.5 bg-warning/8 border border-warning/20 rounded-lg px-3 py-2">
+                        <AlertTriangle size={12} className="text-warning flex-shrink-0" />
+                        <p className="text-2xs text-warning">
+                          Couldn't reach LeetCode — showing your last synced stats
+                        </p>
+                      </div>
+                    )}
                     <div className="grid grid-cols-3 gap-2">
                       <div className="bg-success/10 border border-success/20 rounded-lg px-2 py-2.5 text-center">
                         <p className="text-base font-bold text-success font-mono">
@@ -602,7 +672,16 @@ export default function PlatformConnectionsPage() {
                     ))}
                   </div>
                 ) : ghStats ? (
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="space-y-3">
+                    {ghStale && (
+                      <div className="flex items-center gap-1.5 bg-warning/8 border border-warning/20 rounded-lg px-3 py-2">
+                        <AlertTriangle size={12} className="text-warning flex-shrink-0" />
+                        <p className="text-2xs text-warning">
+                          Couldn't reach GitHub — showing your last synced stats
+                        </p>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-4 gap-2">
                     <div className="bg-secondary/60 rounded-lg px-2 py-2.5 text-center">
                       <p className="text-base font-bold text-foreground font-mono">
                         {ghStats.publicRepos}
@@ -626,6 +705,7 @@ export default function PlatformConnectionsPage() {
                         {ghStats.followers}
                       </p>
                       <p className="text-2xs text-muted-foreground">Followers</p>
+                    </div>
                     </div>
                   </div>
                 ) : (
@@ -672,6 +752,14 @@ export default function PlatformConnectionsPage() {
                   </div>
                 ) : cfStats ? (
                   <div className="space-y-3">
+                    {cfStale && (
+                      <div className="flex items-center gap-1.5 bg-warning/8 border border-warning/20 rounded-lg px-3 py-2">
+                        <AlertTriangle size={12} className="text-warning flex-shrink-0" />
+                        <p className="text-2xs text-warning">
+                          Couldn't reach Codeforces — showing your last synced stats
+                        </p>
+                      </div>
+                    )}
                     <div className="grid grid-cols-4 gap-2">
                       <div className="bg-codeforces/10 border border-codeforces/20 rounded-lg px-2 py-2.5 text-center">
                         <p className="text-base font-bold text-codeforces font-mono">
@@ -720,6 +808,71 @@ export default function PlatformConnectionsPage() {
 
         {/* ── Sync Timeline ────────────────────────────────────────────────── */}
         <SyncEventTimeline />
+
+        {/* ── Advanced ─────────────────────────────────────────────────────── */}
+        <section>
+          <button
+            onClick={() => setShowAdvanced((v) => !v)}
+            className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronDown
+              size={14}
+              className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
+            />
+            Advanced
+          </button>
+
+          {showAdvanced && (
+            <div className="mt-3 bg-card border border-border rounded-xl p-4 space-y-3 max-w-lg">
+              <div>
+                <p className="text-sm font-semibold text-foreground">LeetCode proxy URL</p>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                  LeetCode sometimes blocks direct requests from the app. Deploying a small free
+                  proxy fixes this reliably — see{' '}
+                  <code className="text-2xs bg-secondary px-1 py-0.5 rounded">
+                    /cloudflare-worker/README.md
+                  </code>{' '}
+                  in the project for a 5-minute, no-code setup. Paste the resulting URL here.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={proxyUrlInput}
+                  onChange={(e) => setProxyUrlInput(e.target.value)}
+                  placeholder="https://your-worker.workers.dev"
+                  className="flex-1 px-3 py-2 rounded-lg bg-secondary border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <button
+                  onClick={handleSaveProxyUrl}
+                  className="btn-primary px-3 py-2 rounded-lg text-sm font-semibold flex-shrink-0"
+                >
+                  Save
+                </button>
+              </div>
+              <p className="text-2xs text-muted-foreground">
+                Leave blank to call LeetCode directly (works most of the time, just less
+                reliably).
+              </p>
+            </div>
+          )}
+
+          {showAdvanced && (
+            <div className="mt-3 bg-card border border-border rounded-xl p-4 space-y-2 max-w-lg">
+              <p className="text-sm font-semibold text-foreground">GitHub sync rate limit</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                GitHub syncs work without any setup, but unauthenticated requests are capped at
+                60/hour, shared across your whole network — easy to hit with frequent syncs.
+                Optionally, enabling auth for{' '}
+                <Link href="/notifications" className="text-primary hover:underline">
+                  GitHub Notifications
+                </Link>{' '}
+                (Notifications → GitHub → add a token) also raises this limit to 5,000/hour for
+                your stats syncing automatically — no separate setup needed.
+              </p>
+            </div>
+          )}
+        </section>
       </div>
 
       {/* Connect Modal */}
