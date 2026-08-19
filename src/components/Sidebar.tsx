@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Bell,
   Users,
+  TrendingUp,
 } from 'lucide-react';
 import Icon from '@/components/ui/AppIcon';
 
@@ -25,6 +26,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/', icon: LayoutDashboard, group: 'main' },
   { label: 'Platform Connections', href: '/platform-connections', icon: Link2, group: 'main' },
+  { label: 'Progress', href: '/progress', icon: TrendingUp, group: 'main' },
   { label: 'Compare', href: '/compare', icon: Users, group: 'main' },
   { label: 'Notifications', href: '/notifications', icon: Bell, group: 'account' },
 ];

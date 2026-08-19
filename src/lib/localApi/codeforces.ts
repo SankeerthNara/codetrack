@@ -18,6 +18,8 @@ export interface CodeforcesApiResult {
     rating: number;
     oldRating: number;
   }>;
+  /** `YYYY-MM-DD` (local date) → count of problems first solved that day. */
+  dailySolved: Record<string, number>;
 }
 
 export async function fetchCodeforcesStats(handle: string): Promise<CodeforcesApiResult> {
@@ -49,16 +51,32 @@ export async function fetchCodeforcesStats(handle: string): Promise<CodeforcesAp
   }> = ratingData.status === 'OK' ? ratingData.result : [];
 
   let problemsSolved = 0;
+  const dailySolved: Record<string, number> = {};
+
   if (statusRes.ok) {
     const statusData = await statusRes.json();
     if (statusData.status === 'OK') {
-      const solvedSet = new Set<string>();
-      for (const sub of statusData.result) {
-        if (sub.verdict === 'OK' && sub.problem) {
-          solvedSet.add(`${sub.problem.contestId}-${sub.problem.index}`);
-        }
+      // Codeforces returns submissions newest-first. To count each problem
+      // on the day it was FIRST solved (not every day it was resubmitted),
+      // walk oldest-to-newest and only count a problem's earliest AC.
+      const submissions: Array<{
+        verdict: string;
+        creationTimeSeconds: number;
+        problem?: { contestId: number; index: string };
+      }> = statusData.result;
+      const chronological = [...submissions].reverse();
+
+      const solvedProblems = new Set<string>();
+      for (const sub of chronological) {
+        if (sub.verdict !== 'OK' || !sub.problem) continue;
+        const key = `${sub.problem.contestId}-${sub.problem.index}`;
+        if (solvedProblems.has(key)) continue;
+        solvedProblems.add(key);
+
+        const dateKey = new Date(sub.creationTimeSeconds * 1000).toISOString().slice(0, 10);
+        dailySolved[dateKey] = (dailySolved[dateKey] ?? 0) + 1;
       }
-      problemsSolved = solvedSet.size;
+      problemsSolved = solvedProblems.size;
     }
   }
 
@@ -81,5 +99,6 @@ export async function fetchCodeforcesStats(handle: string): Promise<CodeforcesAp
     maxRank: userInfo?.maxRank ?? null,
     problemsSolved,
     ratingHistory: last10,
+    dailySolved,
   };
 }

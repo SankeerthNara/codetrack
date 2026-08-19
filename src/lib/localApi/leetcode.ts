@@ -65,21 +65,7 @@ const COMBINED_QUERY = `
  * by walking backward from today (or yesterday, if nothing's been submitted
  * yet today) until a day with no activity.
  */
-function computeCurrentStreak(submissionCalendar: string | null | undefined): number {
-  if (!submissionCalendar) return 0;
-
-  let dayCounts: Record<string, number>;
-  try {
-    dayCounts = JSON.parse(submissionCalendar);
-  } catch {
-    return 0;
-  }
-
-  const activeDays = new Set(
-    Object.entries(dayCounts)
-      .filter(([, count]) => count > 0)
-      .map(([timestamp]) => Math.floor(Number(timestamp) / SECONDS_PER_DAY))
-  );
+function computeCurrentStreak(activeDays: Set<number>): number {
   if (activeDays.size === 0) return 0;
 
   const todayIndex = Math.floor(Date.now() / 1000 / SECONDS_PER_DAY);
@@ -94,6 +80,43 @@ function computeCurrentStreak(submissionCalendar: string | null | undefined): nu
   return streak;
 }
 
+/**
+ * Parses LeetCode's `submissionCalendar` JSON (`{ unixDayStart: count }`)
+ * into a `YYYY-MM-DD` (local date) → submission count map, and the set of
+ * active day-indices used for streak math.
+ *
+ * Note: this counts SUBMISSIONS per day, not distinct accepted solves —
+ * LeetCode's public calendar doesn't distinguish AC from non-AC per day
+ * (this is also what the profile heatmap on leetcode.com itself shows).
+ * For most people who mostly solve on the first few tries this is a
+ * reasonable proxy, but it can run slightly high versus "problems solved."
+ */
+function parseSubmissionCalendar(submissionCalendar: string | null | undefined): {
+  byDate: Record<string, number>;
+  activeDayIndices: Set<number>;
+} {
+  const byDate: Record<string, number> = {};
+  const activeDayIndices = new Set<number>();
+  if (!submissionCalendar) return { byDate, activeDayIndices };
+
+  let dayCounts: Record<string, number>;
+  try {
+    dayCounts = JSON.parse(submissionCalendar);
+  } catch {
+    return { byDate, activeDayIndices };
+  }
+
+  for (const [timestamp, count] of Object.entries(dayCounts)) {
+    if (count <= 0) continue;
+    const seconds = Number(timestamp);
+    activeDayIndices.add(Math.floor(seconds / SECONDS_PER_DAY));
+    const dateKey = new Date(seconds * 1000).toISOString().slice(0, 10);
+    byDate[dateKey] = (byDate[dateKey] ?? 0) + count;
+  }
+
+  return { byDate, activeDayIndices };
+}
+
 export interface LeetCodeApiResult {
   username: string;
   profile: {
@@ -104,6 +127,8 @@ export interface LeetCodeApiResult {
   };
   solved: { total: number; easy: number; medium: number; hard: number };
   calendar: { streak: number; totalActiveDays: number };
+  /** `YYYY-MM-DD` (local date) → submission count that day. See parseSubmissionCalendar. */
+  dailySubmissions: Record<string, number>;
   contest: {
     attendedContestsCount: number;
     rating: number;
@@ -127,6 +152,10 @@ export async function fetchLeetCodeStats(username: string): Promise<LeetCodeApiR
     acSubmissions.find((s: { difficulty: string; count: number }) => s.difficulty === difficulty)
       ?.count ?? 0;
 
+  const { byDate, activeDayIndices } = parseSubmissionCalendar(
+    matchedUser.userCalendar?.submissionCalendar
+  );
+
   return {
     username: matchedUser.username,
     profile: {
@@ -142,9 +171,10 @@ export async function fetchLeetCodeStats(username: string): Promise<LeetCodeApiR
       hard: findCount('Hard'),
     },
     calendar: {
-      streak: computeCurrentStreak(matchedUser.userCalendar?.submissionCalendar),
+      streak: computeCurrentStreak(activeDayIndices),
       totalActiveDays: matchedUser.userCalendar?.totalActiveDays ?? 0,
     },
+    dailySubmissions: byDate,
     contest: json.data?.userContestRanking
       ? {
           attendedContestsCount: json.data.userContestRanking.attendedContestsCount,
