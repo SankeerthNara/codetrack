@@ -6,8 +6,8 @@ import {
   GitPullRequest,
   MessageSquare,
   GitCommit,
-  AlertCircle,
-  Trophy,
+  CircleDot,
+  Tag,
   ExternalLink,
   RefreshCw,
   CheckCheck,
@@ -63,8 +63,8 @@ function NotifIcon({ type }: { type: string }) {
       );
     case 'Issue':
       return (
-        <div className={`${base} bg-danger/10`}>
-          <AlertCircle size={15} className="text-danger" />
+        <div className={`${base} bg-success/10`}>
+          <CircleDot size={15} className="text-success" />
         </div>
       );
     case 'Commit':
@@ -82,7 +82,7 @@ function NotifIcon({ type }: { type: string }) {
     case 'Release':
       return (
         <div className={`${base} bg-warning/10`}>
-          <Trophy size={15} className="text-warning" />
+          <Tag size={15} className="text-warning" />
         </div>
       );
     default:
