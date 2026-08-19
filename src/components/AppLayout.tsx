@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
+import ThemeSwitcher from './ThemeSwitcher';
 import { useTheme } from '@/context/ThemeContext';
 import { usePathname } from 'next/navigation';
 
@@ -13,21 +14,16 @@ interface AppLayoutProps {
 export default function AppLayout({ children, activePath }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const pathname = usePathname();
   const resolvedActivePath = activePath ?? pathname ?? '/';
 
   // Apply theme class to <html> element
   useEffect(() => {
     const html = document.documentElement;
-    if (theme === 'light') {
-      html.classList.remove('dark');
-      html.classList.add('light');
-    } else {
-      html.classList.remove('light');
-      html.classList.add('dark');
-    }
-  }, [theme]);
+    html.classList.remove('dark', 'light');
+    html.classList.add(resolvedTheme);
+  }, [resolvedTheme]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -58,25 +54,28 @@ export default function AppLayout({ children, activePath }: AppLayoutProps) {
             </div>
             <span className="font-semibold text-foreground text-sm">ProgressTracker</span>
           </div>
-          <button
-            onClick={() => setMobileSidebarOpen(true)}
-            className="p-2 rounded-md hover:bg-secondary transition-colors"
-            aria-label="Open navigation menu"
-          >
-            <svg
-              className="w-5 h-5 text-muted-foreground"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+          <div className="flex items-center gap-1">
+            <ThemeSwitcher />
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="p-2 rounded-md hover:bg-secondary transition-colors"
+              aria-label="Open navigation menu"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
+              <svg
+                className="w-5 h-5 text-muted-foreground"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Page content */}

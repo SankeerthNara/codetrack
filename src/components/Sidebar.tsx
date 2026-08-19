@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import AppLogo from '@/components/ui/AppLogo';
+import ThemeSwitcher from './ThemeSwitcher';
 import {
   LayoutDashboard,
   Link2,
@@ -10,10 +11,7 @@ import {
   ChevronRight,
   Bell,
   Users,
-  Sun,
-  Moon,
 } from 'lucide-react';
-import { useTheme } from '@/context/ThemeContext';
 import Icon from '@/components/ui/AppIcon';
 
 interface NavItem {
@@ -46,7 +44,6 @@ export default function Sidebar({
   mobileOpen,
   onMobileClose,
 }: SidebarProps) {
-  const { theme, toggleTheme } = useTheme();
   const mainItems = navItems.filter((i) => i.group === 'main');
   const accountItems = navItems.filter((i) => i.group === 'account');
 
@@ -55,28 +52,6 @@ export default function Sidebar({
     return activePath.startsWith(href);
   };
 
-  const ThemeToggleButton = ({ showLabel }: { showLabel: boolean }) => (
-    <button
-      onClick={toggleTheme}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all w-full ${collapsed && !showLabel ? 'justify-center px-0 w-10 mx-auto' : ''}`}
-      title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-    >
-      {theme === 'dark' ? (
-        <Sun size={18} className="flex-shrink-0" />
-      ) : (
-        <Moon size={18} className="flex-shrink-0" />
-      )}
-      {showLabel && (
-        <span className="truncate">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
-      )}
-      {collapsed && !showLabel && (
-        <span className="absolute left-full ml-3 px-2 py-1 bg-secondary text-foreground text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 border border-border">
-          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-        </span>
-      )}
-    </button>
-  );
 
   return (
     <>
@@ -90,7 +65,7 @@ export default function Sidebar({
       >
         {/* Logo */}
         <div
-          className={`flex items-center gap-3 px-4 py-5 border-b border-border ${collapsed ? 'justify-center px-0' : ''}`}
+          className={`flex items-center gap-3 px-4 py-5 border-b border-border ${collapsed ? 'justify-center px-0' : 'justify-between'}`}
         >
           <div className="flex items-center gap-2 min-w-0">
             <AppLogo size={28} />
@@ -100,6 +75,7 @@ export default function Sidebar({
               </span>
             )}
           </div>
+          {!collapsed && <ThemeSwitcher />}
         </div>
 
         {/* Nav */}
@@ -171,17 +147,15 @@ export default function Sidebar({
               );
             })}
           </ul>
-
-          {/* Theme toggle in nav */}
-          <div className="mt-3 border-t border-border mx-2 pt-3">
-            <div className={`relative group ${collapsed ? 'flex justify-center' : 'px-0'}`}>
-              <ThemeToggleButton showLabel={!collapsed} />
-            </div>
-          </div>
         </nav>
 
         {/* Collapse control */}
         <div className="border-t border-border">
+          {collapsed && (
+            <div className="flex justify-center pt-3">
+              <ThemeSwitcher />
+            </div>
+          )}
           <div className="px-2 py-3">
             <button
               onClick={onToggleCollapse}
@@ -277,11 +251,6 @@ export default function Sidebar({
               );
             })}
           </ul>
-
-          {/* Mobile theme toggle */}
-          <div className="mt-3 border-t border-border mx-2 pt-3 px-0">
-            <ThemeToggleButton showLabel={true} />
-          </div>
         </nav>
       </aside>
     </>
